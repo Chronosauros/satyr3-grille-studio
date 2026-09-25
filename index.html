@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Satyr 3 Grille Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#b8b3a9;--slab:#d7d3ca;--slab2:#c6c1b7;--ink:#161513;--muted:#57534c;
+  --acc:#e2531d;--acc2:#f0784a;--ok:#2f7d3a;--bad:#c42b1c;
+  --mat:#ddd0b6;--mat-hi:#f3ead9;--mat-lo:#7a705f;--cavity:#1a1816;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--bg);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .32 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color:var(--ink);font-family:'Archivo',system-ui,sans-serif;font-size:15px;line-height:1.4;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 24px 72px}
+.slab{background:var(--slab);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:26px;border-bottom:6px solid var(--ink);padding-bottom:16px}
+.mast .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.mast h1{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:clamp(34px,6vw,64px);line-height:.92;margin:6px 0 0;letter-spacing:-.02em;text-transform:uppercase}
+.mast h1 span{display:inline-block;background:var(--acc);padding:0 .12em;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);margin-left:.08em}
+.mast p{margin:0;max-width:420px;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start}
+.stage{padding:18px}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.nameplate{font-family:'Archivo Black',sans-serif;font-size:22px;text-transform:uppercase;letter-spacing:.01em}
+.nameplate small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-weight:500}
+.mats{display:flex;gap:8px;flex-wrap:wrap}
+.chip{width:34px;height:34px;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;padding:0;position:relative}
+.chip:active,.chip:hover:active,.chip.on{transform:translate(3px,3px);box-shadow:inset 2px 2px 0 rgba(0,0,0,.35)}
+.chip span{position:absolute;left:0;right:0;top:100%;margin-top:6px;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;text-align:center;opacity:0}
+.chip.on span{opacity:1}
+.viewport{background:var(--slab2);border:3px solid var(--ink);box-shadow:inset 4px 4px 0 rgba(0,0,0,.14);display:flex;justify-content:center;padding:14px;margin-top:22px}
+.viewport svg{width:100%;max-width:620px;display:block;aspect-ratio:1}
+.mat{fill:var(--mat)}
+.cav0{stop-color:#3a3632}.cav1{stop-color:var(--cavity)}
+.chi{stop-color:var(--mat-hi)}.clo{stop-color:var(--mat-lo)}
+.stats{display:grid;grid-template-columns:1.6fr 1fr 1.2fr;gap:0;margin-top:18px;border:3px solid var(--ink)}
+.stat{padding:12px 14px;border-right:3px solid var(--ink);background:var(--slab)}
+.stat:last-child{border-right:0}
+.lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.val{font-family:'Archivo Black',sans-serif;font-size:28px;line-height:1.05;margin-top:4px}
+.bar{position:relative;height:14px;border:2px solid var(--ink);background:var(--slab2);margin-top:8px}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--acc)}
+.bar b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink)}
+.bar b::after{content:attr(data-l);position:absolute;top:100%;left:50%;transform:translateX(-50%);font:500 9px var(--mono);margin-top:3px;white-space:nowrap}
+.barlegend{font:500 9px var(--mono);color:var(--muted);margin-top:16px;letter-spacing:.04em}
+.badge{display:inline-block;font:600 11px var(--mono);letter-spacing:.08em;padding:2px 6px;border:2px solid var(--ink);margin-left:6px;vertical-align:middle;text-transform:uppercase}
+.badge.ok{background:#bfe0b9}.badge.bad{background:#f3b1a6}
+.note{font-family:var(--mono);font-size:12px;color:var(--muted);min-height:16px;margin-top:10px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.btn{font:700 14px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--acc);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px 16px;cursor:pointer;transition:transform .05s,box-shadow .05s;min-height:48px}
+.btn.big{flex:1 1 260px}
+.btn.ghost{background:var(--slab)}
+.btn:hover{background:var(--acc2)}
+.btn.ghost:hover{background:#e6e2da}
+.btn:active,.btn:hover:active{transform:translate(4px,4px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.35)}
+.btn.on{transform:translate(4px,4px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.35);background:var(--slab2)}
+.status{font-family:var(--mono);font-size:12px;color:var(--muted);min-height:16px;margin-top:10px}
+.panel{padding:18px}
+.panel h3{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.key{font:700 13px 'Archivo',sans-serif;text-align:left;background:var(--slab);color:var(--ink);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:9px 10px;cursor:pointer;min-height:48px;line-height:1.15}
+.key small{display:block;font:400 10px var(--mono);color:var(--muted);margin-top:2px;letter-spacing:.02em}
+.key:hover{background:#e6e2da}
+.key:active,.key:hover:active,.key.on{transform:translate(3px,3px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.3);background:var(--acc)}
+.key.on small{color:var(--ink)}
+.ctrls{display:flex;flex-direction:column;gap:14px;margin-top:20px;padding-top:18px;border-top:3px solid var(--ink)}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.ctrl label{font-weight:600;font-size:13px}
+.ctrl output{font:600 12px var(--mono);background:var(--ink);color:var(--slab);padding:1px 6px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:12px;background:var(--slab2);border:3px solid var(--ink);box-shadow:inset 2px 2px 0 rgba(0,0,0,.2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:26px;background:var(--acc);border:3px solid var(--ink);margin-top:-10px;box-shadow:2px 2px 0 var(--ink)}
+input[type=range]:active::-webkit-slider-thumb{box-shadow:none;transform:translate(1px,1px)}
+input[type=range]::-moz-range-track{height:12px;background:var(--slab2);border:3px solid var(--ink)}
+input[type=range]::-moz-range-thumb{width:16px;height:22px;background:var(--acc);border:3px solid var(--ink);border-radius:0;box-shadow:2px 2px 0 var(--ink)}
+.about{font-family:var(--mono);font-size:12px;color:var(--muted);margin:14px 0 0}
+section.gal{margin-top:48px}
+.gal-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;border-bottom:6px solid var(--ink);padding-bottom:10px;margin-bottom:20px}
+.gal-head h2{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:30px;text-transform:uppercase;margin:0;letter-spacing:-.01em}
+.gal-head p{margin:0;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+.card{background:var(--slab);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;display:block;width:100%}
+.card:hover{background:#e6e2da}
+.card:active,.card:hover:active,.card.on{transform:translate(5px,5px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.25)}
+.card.on{background:var(--acc)}
+.card svg{width:100%;display:block;aspect-ratio:1;background:var(--slab2);border:2px solid var(--ink)}
+.card .nm{font-family:'Archivo Black',sans-serif;font-size:16px;text-transform:uppercase;margin-top:10px}
+.card .ab{font-size:12px;color:var(--muted);margin-top:2px;min-height:32px}
+.card.on .ab{color:var(--ink)}
+.card .st{font:500 11px var(--mono);margin-top:6px;display:flex;flex-wrap:wrap;gap:2px 10px}
+.card .st span{white-space:nowrap}
+details.grp{margin-top:40px;background:var(--slab);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+details.grp>summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary h2{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:18px;text-transform:uppercase;margin:0}
+details.grp>summary p{margin:2px 0 0;font-family:var(--mono);font-size:12px;color:var(--muted)}
+details.grp>summary .arr{flex:0 0 auto;width:36px;height:36px;border:3px solid var(--ink);display:grid;place-items:center;font-weight:700;background:var(--acc);transition:transform .15s}
+details.grp[open]>summary .arr{transform:rotate(180deg)}
+details.grp .inner{padding:4px 18px 20px;border-top:3px solid var(--ink)}
+details.grp.inpanel{margin-top:14px;box-shadow:3px 3px 0 var(--ink)}
+details.grp.inpanel>summary{padding:10px 12px}
+details.grp.inpanel>summary h2{font-size:13px}
+details.grp.inpanel>summary .arr{width:30px;height:30px}
+details.grp.inpanel .inner{padding:12px}
+.airbox{margin-top:14px}
+.airqs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.airqs .key{min-height:44px;text-align:center}
+.ctrl.locked label{color:var(--muted)}
+.ctrl.locked input{opacity:.45;cursor:not-allowed}
+.ctrl.locked output{background:var(--acc);color:var(--ink)}
+.bar u{position:absolute;top:-7px;bottom:-7px;width:0;border-left:3px dashed var(--acc);margin-left:-1px}
+footer{margin-top:44px;font-family:var(--mono);font-size:11px;color:var(--muted);border-top:3px solid var(--ink);padding-top:12px}
+@media (max-width:960px){.grid{grid-template-columns:1fr}}
+@media (max-width:600px){
+  .wrap{padding:18px 16px 60px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat:first-child{grid-column:1/-1;border-right:0;border-bottom:3px solid var(--ink)}
+  .cards{grid-template-columns:1fr 1fr;gap:14px}
+  .card .ab{display:none}
+}
+@media print{details.grp .inner{display:block}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- matte relief: single directional light from top-left, diffuse only -->
+    <filter id="tactile" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.42" result="blur"/>
+      <feDiffuseLighting in="blur" surfaceScale="2.4" diffuseConstant="1.2" lighting-color="#ffffff" result="diff">
+        <feDistantLight azimuth="225" elevation="50"/>
+      </feDiffuseLighting>
+      <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="4" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0.22 0 0 0 0.84  0.22 0 0 0 0.84  0.22 0 0 0 0.84  0 0 0 0 1" result="grain"/>
+      <feBlend in="SourceGraphic" in2="diff" mode="multiply" result="lit"/>
+      <feBlend in="lit" in2="grain" mode="multiply" result="tex"/>
+      <feComposite in="tex" in2="SourceAlpha" operator="in" result="plate"/>
+      <feOffset in="SourceAlpha" dx="0.55" dy="0.75" result="off"/>
+      <feGaussianBlur in="off" stdDeviation="0.45" result="offb"/>
+      <feColorMatrix in="offb" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0" result="shadow"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="plate"/></feMerge>
+    </filter>
+    <filter id="grain" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="9" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0.22 0 0 0 0.84  0.22 0 0 0 0.84  0.22 0 0 0 0.84  0 0 0 0 1" result="g"/>
+      <feBlend in="SourceGraphic" in2="g" mode="multiply" result="t"/>
+      <feComposite in="t" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="1.1"/></filter>
+    <linearGradient id="chamf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0.12" class="chi"/><stop offset="0.9" class="clo"/>
+    </linearGradient>
+    <radialGradient id="cavity"><stop offset="0" class="cav0"/><stop offset="1" class="cav1"/></radialGradient>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <div class="kicker">Capra Audio Satyr 3 · Ø94 body · Ø70.6 face</div>
+      <h1>Grille<span>Studio</span></h1>
+    </div>
+    <p>Retro brutalist series: eight new families built from concrete screen blocks, ribbed facades, coffered ceilings and radio hardware. Every pattern prints face-down on the measured body with the minimum wall measured live.</p>
+  </header>
+
+  <div class="grid">
+    <section class="stage slab">
+      <div class="stage-top">
+        <div class="nameplate" id="nameplate">-</div>
+        <div class="mats" id="mats"></div>
+      </div>
+      <div class="viewport">
+        <svg id="main" viewBox="-50 -50 100 100" role="img" aria-label="Grille preview">
+          <circle r="47.4" cx="1.3" cy="1.8" fill="rgba(0,0,0,.35)" filter="url(#soft)"/>
+          <circle r="40.2" fill="url(#cavity)"/>
+          <path id="chamfer" class="mat" fill="url(#chamf)" style="fill:url(#chamf)" fill-rule="evenodd" filter="url(#grain)"/>
+          <circle r="47" fill="none" stroke="#161513" stroke-width="0.35"/>
+          <path id="plate" class="mat" fill-rule="evenodd" filter="url(#tactile)"/>
+          <circle r="40" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="0.25"/>
+          <g id="guides" style="display:none" fill="none" stroke="#e2531d">
+            <circle r="34.3" stroke-width="0.25"/>
+            <circle r="35.28" stroke-width="0.15" stroke-dasharray="0.8 0.6"/>
+            <circle cx="38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
+            <circle cx="-38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
+            <line x1="-47" x2="47" stroke-width="0.12" stroke-dasharray="1 1"/>
+            <line y1="-47" y2="47" stroke-width="0.12" stroke-dasharray="1 1"/>
+          </g>
+        </svg>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="lab">Open area</div>
+          <div class="val" id="sOpen">-</div>
+          <div class="bar"><i id="sBar"></i><b style="left:30%" data-l="30"></b><b style="left:45%" data-l="45"></b><b style="left:54%" data-l="54"></b><u id="sTarget"></u></div>
+          <div class="barlegend">phyllotaxis 30 · raindrop 45 · stock 54</div>
+        </div>
+        <div class="stat"><div class="lab">Holes</div><div class="val" id="sHoles">-</div></div>
+        <div class="stat"><div class="lab">Min wall</div><div class="val" id="sWall">-</div></div>
+      </div>
+      <div class="note" id="note"></div>
+      <div class="actions">
+        <button class="btn big" id="bStl">Download STL - ready to print</button>
+        <button class="btn ghost" id="bSvg">SVG</button>
+        <button class="btn ghost" id="bGuide">Guides</button>
+      </div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <aside class="panel slab">
+      <h3>Air</h3>
+      <div class="keys">
+        <button class="key" id="airDesign">Design default<small>each design as drawn</small></button>
+        <button class="key" id="airTarget">Target open area<small>hole size solved for air</small></button>
+      </div>
+      <div class="ctrl airbox"><div class="row"><label for="wallRange">Min wall (print limit)</label><output id="wallVal"></output></div><input type="range" id="wallRange" min="1.2" max="3" step="0.1"></div>
+      <div id="airBox" class="airbox" hidden>
+        <div class="ctrl"><div class="row"><label for="airRange">Target open area</label><output id="airVal"></output></div><input type="range" id="airRange" min="25" max="60" step="1"></div>
+        <div class="airqs"><button class="key airq" data-v="30">30 %<small>phyllotaxis</small></button><button class="key airq" data-v="45">45 %<small>raindrop</small></button><button class="key airq" data-v="54">54 %<small>stock</small></button></div>
+        <div class="note" id="airNote"></div>
+      </div>
+      <h3 style="margin-top:22px">Family</h3>
+      <div class="keys" id="keysNew"></div>
+      <details class="grp inpanel" data-grp="oldfam">
+        <summary><div><h2>Earlier families</h2><p>6 families from 18.07 - waves, vortex, hex, sunburst, topo, pebbles</p></div><span class="arr">▾</span></summary>
+        <div class="inner"><div class="keys" id="keysOld"></div></div>
+      </details>
+      <p class="about" id="about"></p>
+      <div class="ctrls" id="ctrls"></div>
+    </aside>
+  </div>
+
+  <section class="gal">
+    <div class="gal-head">
+      <h2>Retro brutalist presets</h2>
+      <p id="galInfo">17 designs · tap to load and tweak</p>
+    </div>
+    <div class="cards" id="cardsNew"></div>
+  </section>
+
+  <details class="grp" data-grp="oldpre">
+    <summary><div><h2>Earlier presets</h2><p>12 designs from the first studio (18.07), same body and export</p></div><span class="arr">▾</span></summary>
+    <div class="inner"><div class="cards" id="cardsOld" style="margin-top:16px"></div></div>
+  </details>
+
+  <footer>Body constants from the measured Interlocking_Slots_A.stl: base Ø94 with 45° chamfer to Ø80, ID 70.56, face plate 2 mm, pattern reach r 34.3, blind mount holes Ø4 at ±38.8. Min wall is measured on the actual outlines (0.3 mm sampling). Print face-down without supports, so the tactile character comes from chunky through-cut geometry, not surface relief. SVG export stays compatible with satyr_grille_generator.py.</footer>
+</div>
+
+<script>
+const REACH=34.3,FACE_R=35.28,TOP_R=40;
+let MIN_WALL=2; // user setting, read by the solver, the wall check and the coffer cap
+
+/* ---------- geometry helpers ---------- */
+function prng(seed){let a=(seed*2654435761)>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function area(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=a[0]*b[1]-b[0]*a[1]}return s/2}
+function circlePoly(cx,cy,r,n){n=n||Math.max(24,Math.round(r*10));const o=[];for(let i=0;i<n;i++){const a=i/n*2*Math.PI;o.push([cx+r*Math.cos(a),cy+r*Math.sin(a)])}return o}
+function bufferLine(pts,w){
+  const r=w/2,n=pts.length,d=[];
+  for(let i=0;i<n;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)];const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1e-9;d.push([dx/l,dy/l])}
+  const out=[];
+  for(let i=0;i<n;i++)out.push([pts[i][0]-d[i][1]*r,pts[i][1]+d[i][0]*r]);
+  const ae=Math.atan2(d[n-1][1],d[n-1][0]);
+  for(let k=1;k<12;k++){const a=ae+Math.PI/2-Math.PI*k/12;out.push([pts[n-1][0]+r*Math.cos(a),pts[n-1][1]+r*Math.sin(a)])}
+  for(let i=n-1;i>=0;i--)out.push([pts[i][0]+d[i][1]*r,pts[i][1]-d[i][0]*r]);
+  const a0=Math.atan2(d[0][1],d[0][0]);
+  for(let k=1;k<12;k++){const a=a0-Math.PI/2-Math.PI*k/12;out.push([pts[0][0]+r*Math.cos(a),pts[0][1]+r*Math.sin(a)])}
+  return out;
+}
+function stadium(ax,ay,bx,by,w){return Math.hypot(bx-ax,by-ay)<0.05?circlePoly((ax+bx)/2,(ay+by)/2,w/2):bufferLine([[ax,ay],[bx,by]],w)}
+function roundedNgon(cx,cy,circumR,nS,rot,cr){
+  const inr=circumR*Math.cos(Math.PI/nS);
+  if(cr>=inr*0.97)return circlePoly(cx,cy,inr);
+  const dc=cr/Math.sin(Math.PI*(nS-2)/nS/2),sweep=2*Math.PI/nS,out=[];
+  for(let i=0;i<nS;i++){const a=rot+i*sweep;
+    const ccx=cx+(circumR-dc)*Math.cos(a),ccy=cy+(circumR-dc)*Math.sin(a);
+    for(let k=0;k<=6;k++){const aa=a-sweep/2+sweep*k/6;out.push([ccx+Math.max(cr,0.01)*Math.cos(aa),ccy+Math.max(cr,0.01)*Math.sin(aa)])}}
+  return out;
+}
+function roundRect(cx,cy,w,h,r){
+  r=Math.max(0,Math.min(r,w/2,h/2));const out=[],k=8;
+  const cs=[[cx+w/2-r,cy+h/2-r,0],[cx-w/2+r,cy+h/2-r,Math.PI/2],[cx-w/2+r,cy-h/2+r,Math.PI],[cx+w/2-r,cy-h/2+r,1.5*Math.PI]];
+  for(const [x,y,a0] of cs){if(r<0.01){out.push([x,y]);continue}for(let i=0;i<=k;i++){const a=a0+Math.PI/2*i/k;out.push([x+r*Math.cos(a),y+r*Math.sin(a)])}}
+  return out;
+}
+function quatrefoil(cx,cy,s){
+  const d=0.2*s,rc=s/2-d,out=[],M=96;
+  for(let k=0;k<M;k++){const th=k/M*2*Math.PI;let t=0;
+    for(let q=0;q<4;q++){const u=th-q*Math.PI/2,sn=d*Math.sin(u);t=Math.max(t,d*Math.cos(u)+Math.sqrt(Math.max(rc*rc-sn*sn,0)))}
+    out.push([cx+t*Math.cos(th),cy+t*Math.sin(th)])}
+  return out;
+}
+function rot(poly,a){if(!a)return poly;const c=Math.cos(a),s=Math.sin(a);return poly.map(([x,y])=>[x*c-y*s,x*s+y*c])}
+function maxR(poly){let m=0;for(const p of poly){const h=Math.hypot(p[0],p[1]);if(h>m)m=h}return m}
+function fits(poly){return maxR(poly)<=REACH+1e-6}
+function chaikin(pts,it){for(let t=0;t<it;t++){const o=[pts[0]];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];o.push([a[0]*0.75+b[0]*0.25,a[1]*0.75+b[1]*0.25],[a[0]*0.25+b[0]*0.75,a[1]*0.25+b[1]*0.75])}o.push(pts[pts.length-1]);pts=o}return pts}
+function lineLen(l){let s=0;for(let i=1;i<l.length;i++)s+=Math.hypot(l[i][0]-l[i-1][0],l[i][1]-l[i-1][1]);return s}
+function ptSeg(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;let t=l2?((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)}
+function segInter(a,b,c,d){const o=(p,q,r)=>Math.sign((q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]));const o1=o(a,b,c),o2=o(a,b,d),o3=o(c,d,a),o4=o(c,d,b);return o1*o2<0&&o3*o4<0}
+function segDist(a,b,c,d){if(segInter(a,b,c,d))return 0;return Math.min(ptSeg(a,c,d),ptSeg(b,c,d),ptSeg(c,a,b),ptSeg(d,a,b))}
+function resampleClosed(loop,step){
+  const n=loop.length,seg=[];let tot=0;
+  for(let i=0;i<n;i++){const a=loop[i],b=loop[(i+1)%n],l=Math.hypot(b[0]-a[0],b[1]-a[1]);seg.push(l);tot+=l}
+  const M=Math.max(8,Math.round(tot/step)),st=tot/M,out=[];let i=0,acc=0;
+  for(let k=0;k<M;k++){const tg=k*st;while(i<n-1&&acc+seg[i]<tg){acc+=seg[i];i++}const a=loop[i],b=loop[(i+1)%n],t=seg[i]?(tg-acc)/seg[i]:0;out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t])}
+  return {pts:out,len:tot};
+}
+// closed centre-line -> slots, cut by bridges and clipped to the pattern reach
+function loopSlots(loop,o){
+  const {pts,len}=resampleClosed(loop,0.2),n=pts.length,st=len/n,per=len/o.bridges;
+  const keep=pts.map((pt,i)=>{const u=((i*st-o.phase*per)%per+per)%per;return !(u<o.gap/2||u>per-o.gap/2)&&Math.hypot(pt[0],pt[1])<=o.rClip});
+  let j=keep.indexOf(false);if(j<0)j=0;
+  const out=[];let run=[];
+  const flush=()=>{if(run.length>1&&lineLen(run)>=o.minLen)out.push(bufferLine(run,o.w));run=[]};
+  for(let k=1;k<=n;k++){const i=(j+k)%n;if(keep[i])run.push(pts[i]);else flush()}
+  flush();
+  return out;
+}
+// true minimum material width between neighbouring holes, sampled on the outlines
+function measureWall(polys){
+  const step=0.3,cell=2.6,grid=new Map(),P=[];
+  polys.forEach((poly,pi)=>{for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],l=Math.hypot(b[0]-a[0],b[1]-a[1]),k=Math.max(1,Math.ceil(l/step));for(let t=0;t<k;t++)P.push([a[0]+(b[0]-a[0])*t/k,a[1]+(b[1]-a[1])*t/k,pi])}});
+  P.forEach((p,i)=>{const key=Math.floor(p[0]/cell)+','+Math.floor(p[1]/cell);let c=grid.get(key);if(!c){c=[];grid.set(key,c)}c.push(i)});
+  let min=Infinity;
+  for(let i=0;i<P.length;i++){const p=P[i],gx=Math.floor(p[0]/cell),gy=Math.floor(p[1]/cell);
+    for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const c=grid.get((gx+dx)+','+(gy+dy));if(!c)continue;
+      for(const j of c){if(j<=i)continue;const q=P[j];if(q[2]===p[2])continue;const d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(d<min)min=d}}}
+  return min;
+}
+
+/* ---------- retro brutalist families ---------- */
+const GEN_NEW={
+  breeze(p){
+    const P=p.cell,s=P-p.wall,polys=[],N=Math.ceil(REACH/P)+2;
+    const motif=(cx,cy)=>{switch(p.motif){
+      case 0:return [roundRect(cx,cy,s,s,p.soft*s/2)];
+      case 1:return [quatrefoil(cx,cy,s)];
+      case 2:return [roundedNgon(cx,cy,s/2,4,0,p.soft*s*0.2)];
+      case 3:{const sub=(s-p.wall)/2;if(sub<1.6)return [roundRect(cx,cy,s,s,p.soft*s/2)];const o=sub/2+p.wall/2;return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>roundRect(cx+a*o,cy+b*o,sub,sub,p.soft*sub/2))}
+      default:return [circlePoly(cx,cy,s/2)];
+    }};
+    for(let j=-N;j<=N;j++)for(let i=-N;i<=N;i++){
+      const g=motif(i*P+(p.bond&&(j&1)?P/2:0),j*P);
+      if(g.every(fits))polys.push(...g);
+    }
+    return {polys,note:'whole blocks only - the stepped silhouette is intentional'};
+  },
+  corduroy(p){
+    const w=p.slotW,hw=w/2,rC=REACH-hw,pitch=w+p.rib,per=p.seg+p.bridge,polys=[],a=p.angle*Math.PI/180;
+    const rows=Math.floor(rC/pitch);
+    for(let i=-rows;i<=rows;i++){
+      const y=i*pitch,Lc=Math.sqrt(rC*rC-y*y),shift=((i*p.bond*per)%per+per)%per,K=Math.ceil(Lc/per)+2;
+      for(let k=-K;k<=K;k++){
+        const x0=k*per+shift-p.seg/2;
+        const a0=Math.max(x0+hw,-Lc),a1=Math.min(x0+p.seg-hw,Lc);
+        if(a1-a0<Math.max(1.2,(p.seg-w)*0.2))continue;
+        polys.push(rot(stadium(a0,y,a1,y,w),a));
+      }
+    }
+    return {polys,note:''};
+  },
+  coffer(p){
+    const P=p.pitch,ra=p.rot*Math.PI/180,N=Math.ceil(REACH*1.5/P)+1,polys=[];
+    for(let j=-N;j<=N;j++)for(let i=-N;i<=N;i++){
+      const cx=i*P,cy=j*P,rr=Math.hypot(cx,cy)/REACH;if(rr>1.5)continue;
+      let a=P*p.ratio*(1-p.grade*0.5*rr*rr);a=Math.min(a,P-MIN_WALL);if(a<2)continue;
+      const poly=rot(roundRect(cx,cy,a,a,p.round*a/2),ra);
+      if(fits(poly))polys.push(poly);
+    }
+    return {polys,note:''};
+  },
+  tread(p){
+    const P=p.pitch,w=p.slotW,th=p.angle*Math.PI/180;
+    const seg=(cx,cy,ang,h)=>[[cx-h*Math.cos(ang),cy-h*Math.sin(ang)],[cx+h*Math.cos(ang),cy+h*Math.sin(ang)]];
+    const angOf=(i,j)=>((i+j)&1)?-th:th;
+    const ok=h=>{const A=seg(0,0,th,h);for(const [i,j] of [[1,0],[0,1],[1,1],[1,-1],[2,0],[0,2],[2,1],[1,2],[2,-1],[1,-2]]){const B=seg(i*P,j*P,angOf(i,j),h);if(segDist(A[0],A[1],B[0],B[1])-w<p.wall-1e-6)return false}return true};
+    let note='';
+    if(!ok(0))note='pitch too small for the wall - raise pitch';
+    let lo=0,hi=P*2;for(let k=0;k<32;k++){const m=(lo+hi)/2;if(ok(m))lo=m;else hi=m}
+    const h=lo*p.fill,polys=[],N=Math.ceil(REACH/P)+1;
+    for(let j=-N;j<=N;j++)for(let i=-N;i<=N;i++){
+      const s=seg(i*P,j*P,angOf(i,j),h),poly=stadium(s[0][0],s[0][1],s[1][0],s[1][1],w);
+      if(fits(poly))polys.push(poly);
+    }
+    return {polys,note:note||('bar length '+(2*h+w).toFixed(1)+' mm')};
+  },
+  weave(p){
+    const P=p.pitch,m=p.bars,wall=p.wall,ra=p.rot*Math.PI/180;let w=p.slotW,g=m>1?(P-wall-m*w)/(m-1):0,note='';
+    if(m>1&&g<wall){w=(P-wall-(m-1)*wall)/m;g=wall;note='bar width trimmed to '+w.toFixed(2)+' mm to keep walls'}
+    const h=(P-wall-w)/2,span=m*w+(m-1)*g,polys=[],N=Math.ceil(REACH*1.5/P)+1;
+    for(let j=-N;j<=N;j++)for(let i=-N;i<=N;i++){
+      const cx=i*P,cy=j*P,horiz=((i+j)&1)===0;
+      for(let k=0;k<m;k++){
+        const o=-span/2+w/2+k*(w+g);
+        const poly=rot(horiz?stadium(cx-h,cy+o,cx+h,cy+o,w):stadium(cx+o,cy-h,cx+o,cy+h,w),ra);
+        if(fits(poly))polys.push(poly);
+      }
+    }
+    return {polys,note};
+  },
+  facade(p){
+    const rng=prng(p.seed*7127+3),list=[];let total=0;
+    while(total<2*REACH+12){const w=rng()<p.tall?p.slotW*1.7:p.slotW;list.push(w);total+=w+p.wall}
+    total-=p.wall;let y=-total/2;const polys=[];
+    for(const w of list){
+      const yc=y+w/2;y+=w+p.wall;
+      const edge=Math.abs(yc)+w/2;if(edge>=REACH-0.6)continue;
+      const Lc=Math.sqrt(REACH*REACH-edge*edge);
+      let x=-Lc-rng()*p.maxLen*0.8;
+      while(x<Lc){
+        const len=p.minLen+(p.maxLen-p.minLen)*rng();
+        const x0=Math.max(x,-Lc),x1=Math.min(x+len,Lc);
+        if(x1-x0>=Math.max(p.minLen*0.5,w)&&rng()<p.density)polys.push(roundRect((x0+x1)/2,yc,x1-x0,w,p.corner));
+        x+=len+p.bridge*(1+rng()*0.8);
+      }
+    }
+    return {polys,note:''};
+  },
+  bakelite(p){
+    const dAt=r=>p.dMax+(p.dMin-p.dMax)*Math.min(1,r/REACH),holes=[];
+    let edge;
+    if(p.center){const d=dAt(0);holes.push([0,0,d]);edge=d/2}else edge=2.5;
+    let last=null;
+    for(let k=0;k<60;k++){
+      let r=edge+p.wall+dAt(edge)/2;for(let it=0;it<8;it++)r=edge+p.wall+dAt(r)/2;
+      const d=dAt(r);if(r+d/2>REACH)break;
+      const q=(d+p.wall)/(2*r);if(q>=1){edge=r+d/2;continue}
+      let n=Math.floor(Math.PI/Math.asin(q));
+      if(p.aligned&&n>=p.spokes)n=p.spokes*Math.pow(2,Math.floor(Math.log2(n/p.spokes)));
+      if(n<3){edge=r+d/2;continue}
+      const ph=p.aligned?-Math.PI/2:-Math.PI/2+(k%2)*Math.PI/n;
+      for(let i=0;i<n;i++){const a=ph+i*2*Math.PI/n;holes.push([r*Math.cos(a),r*Math.sin(a),d,r])}
+      last=[r,d];edge=r+d/2;
+    }
+    // push rings outward so the last one meets the reach (walls only grow)
+    if(last){const sc=(REACH-last[1]/2)/last[0];if(sc>1)for(const h of holes){h[0]*=sc;h[1]*=sc}}
+    return {polys:holes.map(h=>circlePoly(h[0],h[1],h[2]/2)),note:''};
+  },
+  terrace(p){
+    const w=p.slotW,hw=w/2,rC=REACH-hw,sp=w+p.wall,n=p.sq,polys=[];
+    let k=0;
+    for(let a=rC-0.4;a>=p.core+hw;a-=sp,k++){
+      const M=720,loop=[];
+      for(let i=0;i<M;i++){const t=i/M*2*Math.PI,c=Math.abs(Math.cos(t)),s=Math.abs(Math.sin(t)),r=a/Math.pow(Math.pow(c,n)+Math.pow(s,n),1/n);loop.push([r*Math.cos(t),r*Math.sin(t)])}
+      polys.push(...loopSlots(loop,{bridges:p.bridges,phase:p.bond&&(k&1)?0.5:0,gap:p.bridge+w,rClip:rC,w,minLen:Math.max(2,w)}));
+    }
+    return {polys,note:''};
+  }
+};
+
+/* ---------- earlier families (18.07 studio, unchanged) ---------- */
+const GEN_OLD={
+  waves(p){
+    const hw=p.slotW/2,spacing=p.slotW+2,polys=[];
+    const rOut=REACH-hw-p.amp;
+    for(let i=0;i<p.rings;i++){
+      const r0=rOut-i*spacing;if(r0<4+p.amp)break;
+      const g=(2+p.slotW)/r0,off=i*0.7;
+      for(let s=0;s<p.bridges;s++){
+        const a0=off+s*2*Math.PI/p.bridges+g/2,a1=off+(s+1)*2*Math.PI/p.bridges-g/2;
+        if((a1-a0)*r0<2.5)continue;
+        const m=Math.max(16,Math.round((a1-a0)*r0*2)),pts=[];
+        for(let k=0;k<=m;k++){const a=a0+(a1-a0)*k/m,r=r0+p.amp*Math.sin(p.lobes*a);pts.push([r*Math.cos(a),r*Math.sin(a)])}
+        polys.push(bufferLine(pts,p.slotW));
+      }}
+    return {polys,note:''};
+  },
+  vortex(p){
+    const hw=p.slotW/2,rEnd=REACH-hw,tw=p.slotW+2;
+    let rStart=Math.max(5,p.arms*tw/(2*Math.PI)),b=0,twistRad=p.twist*Math.PI/180,clamped=false;
+    const rStartCap=Math.max(rStart,0.35*rEnd);
+    for(let it=0;it<6;it++){
+      b=twistRad/(rEnd-rStart);
+      const need=r=>tw*p.arms*Math.sqrt(1+r*r*b*b)/(2*Math.PI);
+      let rs=rStart;
+      for(let j=0;j<20;j++)rs=need(rs);
+      if(!isFinite(rs)||rs>rStartCap){
+        const bOk=Math.sqrt(Math.max(Math.pow(2*Math.PI*rStartCap/(tw*p.arms),2)-1,0))/rStartCap;
+        twistRad=bOk*(rEnd-rStartCap);b=bOk;rStart=rStartCap;clamped=true;break;
+      }
+      rStart=Math.max(5,rs);
+    }
+    if(!clamped)b=twistRad/(rEnd-rStart);
+    const effTwist=b*(rEnd-rStart),polys=[];
+    for(let k=0;k<p.arms;k++){
+      const th0=k*2*Math.PI/p.arms,pts=[];
+      for(let i=0;i<=90;i++){const r=rStart+(rEnd-rStart)*i/90,th=th0+b*(r-rStart);pts.push([r*Math.cos(th),r*Math.sin(th)])}
+      polys.push(bufferLine(pts,p.slotW));
+    }
+    return {polys,note:clamped?('twist limited to '+Math.round(effTwist*180/Math.PI)+'° to keep 2 mm walls'):''};
+  },
+  hex(p){
+    const pn=p.cell+p.wall,circumR=(p.cell/2)/Math.cos(Math.PI/6),cr=p.round*p.cell/2;
+    const ro=p.rot*Math.PI/180,cs=Math.cos(ro),sn=Math.sin(ro),polys=[];
+    const J=Math.ceil(REACH/(pn*Math.sqrt(3)/2))+1,I=Math.ceil(REACH/pn)+1;
+    for(let j=-J;j<=J;j++)for(let i=-I;i<=I;i++){
+      const x=i*pn+(j&1?pn/2:0),y=j*pn*Math.sqrt(3)/2;
+      if(Math.hypot(x,y)+circumR>REACH)continue;
+      polys.push(roundedNgon(x,y,circumR,6,Math.PI/6,cr).map(([px,py])=>[px*cs-py*sn,px*sn+py*cs]));
+    }
+    return {polys,note:''};
+  },
+  sunburst(p){
+    const hw=p.slotW/2,rEnd=REACH-hw,tw=p.slotW+2,polys=[];
+    const innerRays=p.stagger?p.rays/2:p.rays;
+    const rIn=Math.max(p.inner,innerRays*tw/(2*Math.PI));
+    const rMid=Math.max(rIn+(rEnd-rIn)*0.45,p.rays*tw/(2*Math.PI));
+    for(let k=0;k<p.rays;k++){
+      const a=k*2*Math.PI/p.rays,shortRay=p.stagger&&(k%2===1),r0=shortRay?rMid:rIn;
+      if(rEnd-r0<2)continue;
+      polys.push(bufferLine([[r0*Math.cos(a),r0*Math.sin(a)],[rEnd*Math.cos(a),rEnd*Math.sin(a)]],p.slotW));
+    }
+    return {polys,note:''};
+  },
+  topo(p){
+    const rng=prng(p.seed*7919+13),waves=[];
+    for(let i=0;i<4;i++){const a=rng()*2*Math.PI,k=2*Math.PI/(p.scale*(0.7+0.6*rng()));waves.push([k*Math.cos(a),k*Math.sin(a),rng()*2*Math.PI,0.6+0.6*rng()])}
+    const f=(x,y)=>waves.reduce((s,w)=>s+w[3]*Math.sin(w[0]*x+w[1]*y+w[2]),0);
+    const step=1.2,R=REACH+1,N=Math.ceil(2*R/step)+1,grid=[];
+    for(let j=0;j<N;j++){const row=[];for(let i=0;i<N;i++)row.push(f(-R+i*step,-R+j*step));grid.push(row)}
+    const amp=waves.reduce((s,w)=>s+w[3],0),rClip=REACH-p.slotW/2,polys=[];
+    const key=pt=>Math.round(pt[0]*20)+':'+Math.round(pt[1]*20);
+    for(let li=0;li<p.levels;li++){
+      const v=-0.7*amp+1.4*amp*(li+0.5)/p.levels,segs=[];
+      for(let j=0;j<N-1;j++)for(let i=0;i<N-1;i++){
+        const x0=-R+i*step,y0=-R+j*step;
+        const c=[grid[j][i]-v,grid[j][i+1]-v,grid[j+1][i+1]-v,grid[j+1][i]-v];
+        const idx=(c[0]>0?1:0)|(c[1]>0?2:0)|(c[2]>0?4:0)|(c[3]>0?8:0);
+        if(idx===0||idx===15)continue;
+        const Pq=[[x0,y0],[x0+step,y0],[x0+step,y0+step],[x0,y0+step]];
+        const cut=(a,b2)=>{const t=c[a]/(c[a]-c[b2]);return[Pq[a][0]+(Pq[b2][0]-Pq[a][0])*t,Pq[a][1]+(Pq[b2][1]-Pq[a][1])*t]};
+        const E={0:()=>cut(0,1),1:()=>cut(1,2),2:()=>cut(2,3),3:()=>cut(3,0)};
+        const T={1:[[3,0]],2:[[0,1]],3:[[3,1]],4:[[1,2]],5:[[3,0],[1,2]],6:[[0,2]],7:[[3,2]],8:[[2,3]],9:[[0,2]],10:[[0,1],[2,3]],11:[[2,1]],12:[[1,3]],13:[[0,1]],14:[[3,0]]};
+        (T[idx]||[]).forEach(([ea,eb])=>segs.push([E[ea](),E[eb]()]));
+      }
+      const map=new Map();
+      segs.forEach((s,i)=>{[s[0],s[1]].forEach(pt=>{const k=key(pt);if(!map.has(k))map.set(k,[]);map.get(k).push(i)})});
+      const used=new Array(segs.length).fill(false);
+      for(let i=0;i<segs.length;i++){
+        if(used[i])continue;used[i]=true;
+        let line=[segs[i][0],segs[i][1]],guard=0;
+        const extend=fw=>{for(;;){if(guard++>20000)break;
+          const pt=fw?line[line.length-1]:line[0];
+          const cand=(map.get(key(pt))||[]).find(j2=>!used[j2]);
+          if(cand===undefined)break;
+          used[cand]=true;const s=segs[cand];
+          const nxt=key(s[0])===key(pt)?s[1]:s[0];
+          if(fw)line.push(nxt);else line.unshift(nxt);
+        }};
+        extend(true);extend(false);
+        const closed=key(line[0])===key(line[line.length-1]);
+        if(closed){let removed=0;while(line.length>4&&removed<p.slotW+2){const a=line.pop();removed+=Math.hypot(a[0]-line[line.length-1][0],a[1]-line[line.length-1][1])}}
+        const runs=[];let cur=[];for(const pt of line){if(Math.hypot(pt[0],pt[1])<=rClip)cur.push(pt);else{if(cur.length>1)runs.push(cur);cur=[]}}if(cur.length>1)runs.push(cur);
+        for(const run of runs){if(lineLen(run)<4.5)continue;polys.push(bufferLine(chaikin(run,2),p.slotW))}
+      }
+    }
+    return {polys,note:'organic spacing - check thin walls in the slicer preview'};
+  },
+  pebbles(p){
+    const rng=prng(p.seed*104729+7),placed=[],polys=[];
+    for(let t=0;t<4500;t++){
+      const a=rng()*2*Math.PI,d=Math.sqrt(rng())*REACH,frac=d/REACH;
+      let dia=(p.maxD-(p.maxD-p.minD)*frac*p.grad)*(0.8+0.4*rng());
+      dia=Math.min(Math.max(dia,p.minD),p.maxD);
+      if(d+dia/2>REACH)continue;
+      const x=d*Math.cos(a),y=d*Math.sin(a);
+      let ok=true;
+      for(const q of placed){if(Math.hypot(x-q[0],y-q[1])<(dia+q[2])/2+p.wall){ok=false;break}}
+      if(!ok)continue;
+      placed.push([x,y,dia]);polys.push(circlePoly(x,y,dia/2));
+    }
+    return {polys,note:placed.length+' pebbles placed'};
+  }
+};
+const GEN={...GEN_NEW,...GEN_OLD};
+
+const OFF_ON=['Off','On'];
+const TYPES={
+  breeze:{label:'Breeze Block',about:'Mid-century concrete screen blocks - quatrefoil, four-square, diamond.',ctrl:[['cell','Block size',8,16,0.5,'mm'],['wall','Mortar wall',1.2,4,0.1,'mm'],['motif','Motif',0,4,1,'',['Square','Quatrefoil','Diamond','Four-square','Porthole']],['soft','Softness',0,1,0.05],['bond','Running bond',0,1,1,'',OFF_ON]],def:{cell:12,wall:2.2,motif:1,soft:0.5,bond:0}},
+  corduroy:{label:'Corduroy',about:'Ribbed concrete (Paul Rudolph) and Braun radio slots, broken by staggered bridges.',ctrl:[['slotW','Slot width',2,4.5,0.1,'mm'],['rib','Rib',1.2,4,0.1,'mm'],['seg','Slot length',6,40,0.5,'mm'],['bridge','Bridge',2,5,0.1,'mm'],['bond','Stagger',0,1,0.05],['angle','Angle',0,90,1,'°']],def:{slotW:2.4,rib:2.2,seg:24,bridge:2.6,bond:0.5,angle:90}},
+  coffer:{label:'Coffer',about:'Brutalist coffered ceiling and waffle slab - square pockets, heavy beams.',ctrl:[['pitch','Beam pitch',5,12,0.25,'mm'],['ratio','Pocket size',0.4,0.8,0.01],['round','Corner rounding',0,1,0.05],['rot','Rotation',0,45,1,'°'],['grade','Edge taper',0,1,0.05]],def:{pitch:9,ratio:0.72,round:0.15,rot:0,grade:0.5}},
+  tread:{label:'Tread Plate',about:'Industrial diamond checker plate - bars alternate direction cell by cell.',ctrl:[['pitch','Pitch',5,10,0.25,'mm'],['slotW','Bar width',2,3.5,0.1,'mm'],['wall','Wall',1.2,3,0.1,'mm'],['angle','Bar angle',25,65,1,'°'],['fill','Bar length',0.4,1,0.05]],def:{pitch:7,slotW:2.2,wall:2,angle:45,fill:1}},
+  weave:{label:'Basketweave',about:'Brick paving and parquet bond - bar pairs turning 90° per cell.',ctrl:[['pitch','Cell',7,21,0.25,'mm'],['bars','Bars per cell',2,3,1],['slotW','Bar width',2,4,0.1,'mm'],['wall','Wall',1.2,3,0.1,'mm'],['rot','Rotation',0,45,1,'°']],def:{pitch:9.5,bars:2,slotW:2.4,wall:2,rot:0}},
+  facade:{label:'Facade',about:'Barbican balconies and stacked slabs - seeded rhythm of long and short openings.',ctrl:[['slotW','Slab height',2.2,5,0.1,'mm'],['wall','Floor band',1.2,4,0.1,'mm'],['minLen','Shortest',4,14,0.5,'mm'],['maxLen','Longest',12,44,0.5,'mm'],['bridge','Pier',2,5,0.1,'mm'],['density','Openings',0.5,1,0.05],['tall','Tall floors',0,0.6,0.05],['corner','Corner radius',0,1.5,0.1,'mm'],['seed','Seed',1,99,1]],def:{slotW:3,wall:2.2,minLen:5,maxLen:20,bridge:2.4,density:0.88,tall:0.3,corner:0.6,seed:5}},
+  bakelite:{label:'Bakelite',about:'Vintage valve radio and rotary dial - rings of round holes shrinking outward.',ctrl:[['dMax','Centre hole',3,9,0.1,'mm'],['dMin','Edge hole',2,5,0.1,'mm'],['wall','Wall',1.2,3,0.1,'mm'],['center','Centre hole',0,1,1,'',OFF_ON],['aligned','Spokes',0,1,1,'',['Staggered','Aligned']],['spokes','Spoke count',6,12,1]],def:{dMax:4.6,dMin:2.6,wall:2,center:1,aligned:0,spokes:8}},
+  terrace:{label:'Terrace',about:'70s squircle rings and stepped Panton forms, clipped by the round face.',ctrl:[['sq','Squareness',2.4,5,0.1],['slotW','Slot width',2,4.5,0.1,'mm'],['wall','Step',1.2,3.5,0.1,'mm'],['bridges','Bridges / ring',3,8,1],['bridge','Bridge',2,4,0.1,'mm'],['bond','Brick bridges',0,1,1,'',OFF_ON],['core','Solid core',5,14,0.5,'mm']],def:{sq:4,slotW:2.4,wall:2.2,bridges:4,bridge:2.4,bond:1,core:6}},
+  waves:{old:1,label:'Waves / Moiré',about:'Earlier family (18.07).',ctrl:[['rings','Rings',3,10,1],['amp','Wave amplitude',0,3,0.1,'mm'],['lobes','Wave lobes',3,12,1],['slotW','Slot width',2,4,0.1,'mm'],['bridges','Bridges / ring',2,6,1]],def:{rings:7,amp:1.2,lobes:6,slotW:2.6,bridges:3}},
+  vortex:{old:1,label:'Vortex',about:'Earlier family (18.07).',ctrl:[['arms','Arms',6,24,1],['twist','Twist',40,400,10,'°'],['slotW','Slot width',2,4,0.1,'mm']],def:{arms:14,twist:220,slotW:2.6}},
+  hex:{old:1,label:'Hex lattice',about:'Earlier family (18.07).',ctrl:[['cell','Cell size',3,8,0.25,'mm'],['wall','Wall',1.2,4,0.05,'mm'],['round','Corner rounding',0,1,0.05],['rot','Rotation',0,30,1,'°']],def:{cell:5.5,wall:2,round:0.25,rot:0}},
+  sunburst:{old:1,label:'Sunburst',about:'Earlier family (18.07).',ctrl:[['rays','Rays',16,72,2],['slotW','Slot width',2,3.5,0.1,'mm'],['inner','Inner radius',6,22,1,'mm'],['stagger','Staggered',0,1,1,'',OFF_ON]],def:{rays:36,slotW:2.4,inner:10,stagger:1}},
+  topo:{old:1,label:'Topo contours',about:'Earlier family (18.07).',ctrl:[['scale','Terrain scale',14,40,1,'mm'],['levels','Contour levels',3,9,1],['slotW','Slot width',2,3.5,0.1,'mm'],['seed','Seed',1,99,1]],def:{scale:24,levels:6,slotW:2.6,seed:7}},
+  pebbles:{old:1,label:'Pebbles',about:'Earlier family (18.07).',ctrl:[['minD','Min hole',2,4,0.25,'mm'],['maxD','Max hole',5,12,0.5,'mm'],['wall','Wall',1.2,4,0.05,'mm'],['grad','Edge shrink',0,1,0.1],['seed','Seed',1,99,1]],def:{minD:2.5,maxD:7,wall:2,grad:0.7,seed:11}}
+};
+const PRESETS_NEW=[
+  {name:'Breeze Block',type:'breeze',about:'Palm Springs quatrefoil screen wall',par:{cell:12,wall:2.2,motif:1,soft:0.5,bond:0}},
+  {name:'Four Square',type:'breeze',about:'Split block, four pockets per unit',par:{cell:11.5,wall:2,motif:3,soft:0.35,bond:0}},
+  {name:'Harlequin',type:'breeze',about:'Diamond blocks in running bond',par:{cell:9,wall:2,motif:2,soft:0.25,bond:1}},
+  {name:'Corduroy',type:'corduroy',about:'Vertical ribbed concrete, brick-bond breaks',par:{slotW:2.4,rib:2.2,seg:24,bridge:2.6,bond:0.5,angle:90}},
+  {name:'Braun Slots',type:'corduroy',about:'Aligned slot blocks of a 60s radio',par:{slotW:2.2,rib:2,seg:13,bridge:2.4,bond:0,angle:0}},
+  {name:'Brise-Soleil',type:'corduroy',about:'Angled sun louvres of a facade',par:{slotW:3,rib:2.4,seg:30,bridge:3,bond:0.33,angle:30}},
+  {name:'Coffer',type:'coffer',about:'Coffered ceiling, pockets taper to the rim',par:{pitch:9,ratio:0.72,round:0.15,rot:0,grade:0.5}},
+  {name:'Waffle 45',type:'coffer',about:'Diagonal waffle slab',par:{pitch:6.5,ratio:0.66,round:0.35,rot:45,grade:0}},
+  {name:'Tread Plate',type:'tread',about:'Diamond checker plate, anti-slip',par:{pitch:7,slotW:2.2,wall:2,angle:45,fill:1}},
+  {name:'Basketweave',type:'weave',about:'Paving bond, pairs turning 90°',par:{pitch:9.5,bars:2,slotW:2.4,wall:2,rot:0}},
+  {name:'Parquet',type:'weave',about:'Three-strip parquet, laid on the diagonal',par:{pitch:12,bars:3,slotW:2,wall:2,rot:45}},
+  {name:'Barbican',type:'facade',about:'Balcony slabs with taller floors',par:{slotW:3,wall:2.2,minLen:5,maxLen:20,bridge:2.4,density:0.88,tall:0.3,corner:0.6,seed:5}},
+  {name:'Monolith',type:'facade',about:'Long quiet slabs, few piers',par:{slotW:2.4,wall:2,minLen:12,maxLen:38,bridge:2.6,density:1,tall:0,corner:1.2,seed:12}},
+  {name:'Bakelite',type:'bakelite',about:'Valve radio speaker, staggered rings',par:{dMax:4.6,dMin:2.6,wall:2,center:1,aligned:0,spokes:8}},
+  {name:'Dial',type:'bakelite',about:'Rotary telephone, aligned spokes',par:{dMax:6.6,dMin:3.2,wall:2.4,center:1,aligned:1,spokes:10}},
+  {name:'Terrace',type:'terrace',about:'Squircle steps with brick bridges',par:{sq:4,slotW:2.4,wall:2.2,bridges:4,bridge:2.4,bond:1,core:6}},
+  {name:'Tube TV',type:'terrace',about:'Soft CRT-screen rings',par:{sq:3,slotW:2.8,wall:2.4,bridges:4,bridge:2.6,bond:0,core:8}}
+];
+const PRESETS_OLD=[
+  {name:'Ripple',type:'waves',par:{rings:7,amp:1.2,lobes:6,slotW:2.6,bridges:3}},
+  {name:'Moiré Bloom',type:'waves',par:{rings:8,amp:2.2,lobes:9,slotW:2.2,bridges:4}},
+  {name:'Vortex 14',type:'vortex',par:{arms:14,twist:220,slotW:2.6}},
+  {name:'Cyclone',type:'vortex',par:{arms:20,twist:400,slotW:2.2}},
+  {name:'Honeycomb',type:'hex',par:{cell:5.5,wall:2,round:0.3,rot:0}},
+  {name:'Dot Matrix',type:'hex',par:{cell:3.75,wall:2,round:1,rot:0}},
+  {name:'Sunburst 36',type:'sunburst',par:{rays:36,slotW:2.4,inner:10,stagger:1}},
+  {name:'Aperture',type:'sunburst',par:{rays:56,slotW:2,inner:16,stagger:1}},
+  {name:'Contour',type:'topo',par:{scale:22,levels:6,slotW:2.4,seed:7}},
+  {name:'Strata',type:'topo',par:{scale:32,levels:5,slotW:3,seed:3}},
+  {name:'Pebble Field',type:'pebbles',par:{minD:2.5,maxD:7,wall:2,grad:1,seed:11}},
+  {name:'River Stones',type:'pebbles',par:{minD:3,maxD:9.5,wall:2.25,grad:0,seed:4}}
+];
+const MATS={
+  beige:{name:'PETG beige',mat:'#ddd0b6',hi:'#f3ead9',lo:'#7a705f',cav:'#1a1816'},
+  carbon:{name:'PETG-CF',mat:'#3b3a37',hi:'#6d6b66',lo:'#121110',cav:'#8f897e'},
+  concrete:{name:'Concrete',mat:'#b9b4aa',hi:'#dedad2',lo:'#5f5b54',cav:'#1a1816'},
+  oxide:{name:'Oxide',mat:'#c65a2e',hi:'#e8916a',lo:'#5e2410',cav:'#1a1816'}
+};
+
+// Air: each family maps t in [0,1] to hole-vs-wall parameters; the solver searches t for a target open area
+const AIR={
+  breeze:{keys:['cell','wall'],f:t=>({cell:9+6*t,wall:3.2-(3.2-MIN_WALL)*t})},
+  corduroy:{keys:['slotW','rib'],f:t=>({slotW:2+2.5*t,rib:3.6-(3.6-MIN_WALL)*t})},
+  coffer:{keys:['ratio'],f:t=>({ratio:0.4+0.45*t})},
+  tread:{keys:['slotW','wall'],f:t=>({slotW:2+1.5*t,wall:3-(3-MIN_WALL)*t})},
+  weave:{keys:['slotW','wall','pitch'],f:(t,p)=>{const w=2+2*t,wl=3-(3-MIN_WALL)*t;return {slotW:w,wall:wl,pitch:p.bars*(w+wl)+0.01}}},
+  facade:{keys:['slotW','wall'],f:t=>({slotW:2.2+2.8*t,wall:4-(4-MIN_WALL)*t})},
+  bakelite:{keys:['dMax','dMin','wall'],f:t=>({dMax:3+6*t,dMin:2+3*t,wall:3-(3-MIN_WALL)*t})},
+  terrace:{keys:['slotW','wall'],f:t=>({slotW:2+2.5*t,wall:3.5-(3.5-MIN_WALL)*t})},
+  waves:{keys:['slotW'],f:t=>({slotW:2+2*t})},
+  vortex:{keys:['slotW'],f:t=>({slotW:2+2*t})},
+  hex:{keys:['cell','wall'],f:t=>({cell:3+5*t,wall:3-(3-MIN_WALL)*t})},
+  sunburst:{keys:['slotW'],f:t=>({slotW:2+1.5*t})},
+  topo:{keys:['slotW'],f:t=>({slotW:2+1.5*t})},
+  pebbles:{keys:['minD','maxD','wall'],f:t=>({minD:2+2*t,maxD:5+7*t,wall:3-(3-MIN_WALL)*t})}
+};
+
+function generate(type,par,skipWall){
+  const g=GEN[type](par);
+  let ext=0;for(const p of g.polys)for(const pt of p){const h=Math.hypot(pt[0],pt[1]);if(h>ext)ext=h}
+  const scaleTo=TYPES[type].old?(ext>0&&Math.abs(ext-REACH)>0.02):(ext>REACH+0.02);
+  if(scaleTo){const sc=REACH/ext;g.polys=g.polys.map(p=>p.map(pt=>[pt[0]*sc,pt[1]*sc]));if(!TYPES[type].old)g.note=(g.note?g.note+' · ':'')+'scaled to '+(sc*100).toFixed(1)+'% to fit'}
+  g.open=g.polys.reduce((s,p)=>s+Math.abs(area(p)),0)/(Math.PI*FACE_R*FACE_R);
+  g.wall=skipWall?NaN:(g.polys.length>1?measureWall(g.polys):Infinity);
+  return g;
+}
+function toD(polys){return polys.map(p=>'M'+p.map(pt=>pt[0].toFixed(2)+' '+pt[1].toFixed(2)).join('L')+'Z').join('')}
+function circleD(r){return 'M '+r+' 0 A '+r+' '+r+' 0 1 0 -'+r+' 0 A '+r+' '+r+' 0 1 0 '+r+' 0 Z'}
+function wallText(w){return isFinite(w)?(w>=2.6?'≥ 2.6':w.toFixed(2)):'≥ 2.6'}
+function wallOk(w){return !isFinite(w)||w>=MIN_WALL-0.03}
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+function dl(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+function stlBlob(mesh){
+  const np=mesh.numProp,tv=mesh.triVerts,vp=mesh.vertProperties,nt=tv.length/3;
+  const buf=new ArrayBuffer(84+nt*50),dv=new DataView(buf);
+  dv.setUint32(80,nt,true);let o=84;
+  for(let i=0;i<nt;i++){
+    const ia=tv[3*i]*np,ib=tv[3*i+1]*np,ic=tv[3*i+2]*np;
+    const ax=vp[ia],ay=vp[ia+1],az=vp[ia+2],bx=vp[ib],by=vp[ib+1],bz=vp[ib+2],cx=vp[ic],cy=vp[ic+1],cz=vp[ic+2];
+    let nx=(by-ay)*(cz-az)-(bz-az)*(cy-ay),ny=(bz-az)*(cx-ax)-(bx-ax)*(cz-az),nz=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
+    const l=Math.hypot(nx,ny,nz)||1;
+    for(const v of [nx/l,ny/l,nz/l,ax,ay,az,bx,by,bz,cx,cy,cz]){dv.setFloat32(o,v,true);o+=4}
+    dv.setUint16(o,0,true);o+=2;
+  }
+  return new Blob([buf],{type:'model/stl'});
+}
+
+/* ---------- state ---------- */
+const LS='satyr3-retro:';
+function lsGet(k){try{return localStorage.getItem(LS+k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(LS+k,v)}catch(e){}}
+const S={type:'breeze',preset:'Breeze Block',mat:'beige',guides:false,air:{mode:'design',target:54,minWall:2},solved:null,params:Object.fromEntries(Object.entries(TYPES).map(([k,v])=>[k,{...v.def}]))};
+try{const saved=JSON.parse(lsGet('state')||'null');if(saved&&TYPES[saved.type]){S.type=saved.type;S.preset=saved.preset||'';S.mat=MATS[saved.mat]?saved.mat:S.mat;if(saved.air&&(saved.air.mode==='design'||saved.air.mode==='target'))S.air={mode:saved.air.mode,target:Math.min(60,Math.max(25,Math.round(+saved.air.target)||54)),minWall:Math.min(3,Math.max(1.2,+saved.air.minWall||2))};for(const k in saved.params||{})if(S.params[k])Object.assign(S.params[k],saved.params[k])}}catch(e){}
+function save(){lsSet('state',JSON.stringify({type:S.type,preset:S.preset,mat:S.mat,air:S.air,params:S.params}))}
+
+const $=id=>document.getElementById(id);
+let cacheKey='',cacheVal=null;
+function airOn(){return S.air.mode==='target'&&!!S.solved&&S.solved.type===S.type}
+function effParams(){return airOn()?{...S.params[S.type],...S.solved.over}:S.params[S.type]}
+function current(){const par=effParams(),key=S.type+JSON.stringify(par);if(key!==cacheKey){cacheKey=key;cacheVal=generate(S.type,par)}return cacheVal}
+
+let solveTok=0,solveTimer=0;
+function requestSolve(delay){clearTimeout(solveTimer);if(S.air.mode!=='target'){S.solved=null;return}solveTimer=setTimeout(solveAir,delay||0)}
+function solveAir(){
+  const tok=++solveTok,type=S.type,base={...S.params[type]},A=AIR[type],tgt=S.air.target/100,N=33,res=[];let i=0;
+  $('airNote').textContent='solving…';
+  const sample=t=>{t=Math.min(1,Math.max(0,t));try{const g=generate(type,{...base,...A.f(t,base)},true);return {t,open:g.open}}catch(e){return null}};
+  const pickFrom=list=>{list.sort((a,b)=>Math.abs(a.open-tgt)-Math.abs(b.open-tgt));for(const r of list.slice(0,6)){const g=generate(type,{...base,...A.f(r.t,base)});if(wallOk(g.wall))return {...r,wall:g.wall}}return null};
+  const step=()=>{
+    if(tok!==solveTok)return;
+    const t0=performance.now();
+    while(i<N&&performance.now()-t0<25){const r=sample(i/(N-1));if(r)res.push(r);i++}
+    if(i<N){setTimeout(step,0);return}
+    let pick=pickFrom(res.slice());
+    if(pick){const fine=[];for(let k=-4;k<=4;k++){const r=sample(pick.t+k/(8*(N-1)));if(r)fine.push(r)}const p2=pickFrom(fine);if(p2&&Math.abs(p2.open-tgt)<Math.abs(pick.open-tgt))pick=p2}
+    if(tok!==solveTok)return;
+    if(!pick){S.solved=null;$('airNote').textContent='no setting keeps 2 mm walls here - showing the design default';renderMain();syncControls();return}
+    S.solved={type,over:A.f(pick.t,base)};
+    const off=Math.abs(pick.open-tgt)*100;
+    $('airNote').textContent=off<1.5?('solved: '+(pick.open*100).toFixed(1)+' % open, walls '+wallText(pick.wall)+' mm'):('closest this family reaches with 2 mm walls: '+(pick.open*100).toFixed(1)+' %');
+    renderMain();syncControls();
+  };
+  setTimeout(step,0);
+}
+function syncControls(){
+  const t=TYPES[S.type],par=effParams(),locked=S.air.mode==='target'?AIR[S.type].keys:[];
+  t.ctrl.forEach(c=>{const k=c[0],inp=$('c_'+k),out=$('o_'+k);if(!inp)return;const lock=locked.includes(k);inp.disabled=lock;inp.value=par[k];out.textContent=valText(c,par[k])+(lock?' · air':'');inp.closest('.ctrl').classList.toggle('locked',lock)});
+}
+function renderAir(){
+  const tg=S.air.mode==='target';
+  $('airDesign').classList.toggle('on',!tg);$('airTarget').classList.toggle('on',tg);
+  $('airBox').hidden=!tg;$('wallVal').textContent=S.air.minWall.toFixed(1)+' mm';$('wallRange').value=S.air.minWall;$('airVal').textContent=S.air.target+' %';$('airRange').value=S.air.target;
+  document.querySelectorAll('.airq').forEach(b=>b.classList.toggle('on',+b.dataset.v===S.air.target));
+  const m=$('sTarget');m.style.display=tg?'':'none';m.style.left=S.air.target+'%';
+}
+
+function applyMat(){
+  const m=MATS[S.mat],r=document.documentElement.style;
+  r.setProperty('--mat',m.mat);r.setProperty('--mat-hi',m.hi);r.setProperty('--mat-lo',m.lo);r.setProperty('--cavity',m.cav);
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.m===S.mat));
+}
+function renderMain(){
+  let g;try{g=current()}catch(e){console.warn(e);g={polys:[],open:0,wall:Infinity,note:'generation error: '+(e.message||e)}}
+  $('plate').setAttribute('d',circleD(TOP_R)+' '+toD(g.polys));
+  $('sOpen').textContent=(g.open*100).toFixed(1)+' %';
+  $('sBar').style.width=Math.min(100,g.open*100)+'%';
+  $('sHoles').textContent=g.polys.length;
+  const ok=wallOk(g.wall);
+  $('sWall').innerHTML=wallText(g.wall)+'<span class="badge '+(ok?'ok':'bad')+'">'+(ok?'ok':'thin')+'</span>';
+  $('note').textContent=g.note||'';
+  const t=TYPES[S.type];
+  $('nameplate').innerHTML=(S.preset||t.label)+'<small>'+(S.preset?t.label:'custom settings')+(airOn()?' · air '+S.air.target+' %':' · design air')+'</small>';
+  $('about').textContent=t.about;
+  document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',c.dataset.p===S.preset));
+}
+let raf=0;function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderMain()})}
+
+function decimals(step){return step>=1?0:(Math.abs(step*10-Math.round(step*10))<1e-9?1:2)}
+function valText(c,v){if(c[6])return c[6][Math.round(v)]||String(v);return v.toFixed(decimals(c[4]))+(c[5]?' '+c[5]:'')}
+function buildControls(){
+  const t=TYPES[S.type],par=S.params[S.type],box=$('ctrls');box.innerHTML='';
+  t.ctrl.forEach(c=>{
+    const [k,label,min,max,step]=c,id='c_'+k;
+    const d=document.createElement('div');d.className='ctrl';
+    d.innerHTML='<div class="row"><label for="'+id+'">'+label+'</label><output id="o_'+k+'"></output></div><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'">';
+    box.appendChild(d);
+    const inp=d.querySelector('input'),out=d.querySelector('output');
+    inp.value=par[k];out.textContent=valText(c,par[k]);
+    inp.addEventListener('input',()=>{const v=parseFloat(inp.value);S.params[S.type][k]=v;out.textContent=valText(c,v);S.preset='';schedule();save();requestSolve(250)});
+  });
+  document.querySelectorAll('.key[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===S.type));
+  syncControls();
+}
+function buildKeys(){
+  for(const [k,t] of Object.entries(TYPES)){
+    const b=document.createElement('button');b.className='key';b.dataset.t=k;
+    b.innerHTML=t.label+(t.old?'':'<small>'+t.about.split(' - ')[0].split(',')[0].replace(/\.$/,'')+'</small>');
+    b.addEventListener('click',()=>{S.type=k;S.preset='';S.solved=null;buildControls();schedule();save();requestSolve()});
+    (t.old?$('keysOld'):$('keysNew')).appendChild(b);
+  }
+}
+function buildCards(list,host){
+  const jobs=[];
+  list.forEach(p=>{
+    const b=document.createElement('button');b.className='card';b.dataset.p=p.name;
+    b.innerHTML='<svg viewBox="-41 -41 82 82" aria-hidden="true"><circle r="40.2" fill="url(#cavity)"/><path class="mat" fill-rule="evenodd" filter="url(#tactile)"/></svg><div class="nm">'+p.name+'</div>'+(p.about?'<div class="ab">'+p.about+'</div>':'')+'<div class="st"><span>…</span></div>';
+    b.addEventListener('click',()=>{
+      S.type=p.type;S.params[p.type]={...TYPES[p.type].def,...p.par};S.preset=p.name;
+      S.solved=null;buildControls();renderMain();save();requestSolve();
+      if(window.innerWidth<960)document.querySelector('.stage').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    host.appendChild(b);
+    jobs.push(()=>{try{const g=generate(p.type,{...TYPES[p.type].def,...p.par});b.querySelector('path').setAttribute('d',circleD(TOP_R)+' '+toD(g.polys));b.querySelector('.st').innerHTML='<span>'+(g.open*100).toFixed(0)+'% open</span><span>'+g.polys.length+' holes</span><span'+(wallOk(g.wall)?'':' style="color:var(--bad);font-weight:600"')+'>wall '+wallText(g.wall)+'</span>'}catch(e){console.warn('preset',p.name,e)}});
+  });
+  return jobs;
+}
+let cardJobs=[];function refreshCards(){clearTimeout(refreshCards.t);refreshCards.t=setTimeout(()=>runJobs(cardJobs),300)}
+function runJobs(jobs){let i=0;const tick=()=>{const t0=performance.now();while(i<jobs.length&&performance.now()-t0<30)jobs[i++]();if(i<jobs.length)setTimeout(tick,0)};setTimeout(tick,0)}
+
+function initGroups(){
+  document.querySelectorAll('details.grp').forEach(d=>{
+    const k='grp:'+d.dataset.grp;if(lsGet(k)==='1')d.open=true;
+    d.addEventListener('toggle',()=>lsSet(k,d.open?'1':'0'));
+  });
+  window.addEventListener('beforeprint',()=>document.querySelectorAll('details.grp').forEach(d=>d.open=true));
+}
+
+/* ---------- export ---------- */
+function exportName(){return slug(S.preset||S.type+'-custom')+(airOn()?'-air'+S.air.target:'')}
+function exportSvg(){
+  const g=current(),sc=46/REACH;
+  let d='M 100.000 50.000 A 50.000 50.000 0 1 0 0.000 50.000 A 50.000 50.000 0 1 0 100.000 50.000 Z ';
+  d+=g.polys.map(p=>'M '+p.map(pt=>(50+pt[0]*sc).toFixed(3)+' '+(50+pt[1]*sc).toFixed(3)).join(' L ')+' Z').join(' ');
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">\n<title>'+(S.preset||TYPES[S.type].label)+' grille - Ø100 mm, 4 mm rim</title>\n<path fill="#1c1714" fill-rule="evenodd" d="'+d+'"/>\n</svg>';
+  dl('satyr3-'+exportName()+'-100mm.svg',new Blob([svg],{type:'image/svg+xml'}));
+  $('status').textContent='SVG saved - loader-compatible (evenodd, outer circle first)';
+}
+function ensureManifold(){
+  if(!window.__manifoldP)window.__manifoldP=import('https://cdn.jsdelivr.net/npm/manifold-3d@3.1.1/+esm').then(m=>m.default()).then(w=>{w.setup();return w});
+  return window.__manifoldP;
+}
+async function exportStl(){
+  try{
+    $('status').textContent='Loading geometry engine…';
+    const w=await ensureManifold();
+    $('status').textContent='Building mesh…';
+    await new Promise(r=>setTimeout(r,30));
+    const {Manifold,CrossSection}=w,g=current();
+    const flipped=g.polys.map(p=>{const q=p.map(([x,y])=>[x,-y]);return area(q)>0?q:q.slice().reverse()});
+    const holes=new CrossSection(flipped,'NonZero');
+    const facePlate=CrossSection.circle(FACE_R+0.02,256).subtract(holes).extrude(2).translate([0,0,6]);
+    const ring=Manifold.revolve([[FACE_R,0],[47,0],[47,1],[40,8],[FACE_R,8]],256);
+    const cyl=x=>Manifold.cylinder(7,2,2,64).translate([x,0,-1]);
+    const solid=ring.add(facePlate).subtract(cyl(38.8)).subtract(cyl(-38.8));
+    const mesh=solid.getMesh(),name='satyr3_grille_'+exportName().replace(/-/g,'_')+'.stl';
+    dl(name,stlBlob(mesh));
+    $('status').textContent='Saved '+name+' · '+(mesh.triVerts.length/3)+' triangles · Ø94 body, mount holes included';
+  }catch(e){
+    console.warn(e);
+    $('status').textContent='STL engine failed ('+(e.message||e)+') - download the SVG and run satyr_grille_generator.py instead.';
+  }
+}
+
+/* ---------- boot ---------- */
+for(const [k,m] of Object.entries(MATS)){
+  const c=document.createElement('button');c.className='chip';c.dataset.m=k;c.title=m.name;c.style.background=m.mat;c.innerHTML='<span>'+m.name+'</span>';
+  c.addEventListener('click',()=>{S.mat=k;applyMat();save()});$('mats').appendChild(c);
+}
+$('chamfer').setAttribute('d',circleD(47)+' '+circleD(TOP_R));
+MIN_WALL=S.air.minWall;
+buildKeys();buildControls();applyMat();initGroups();renderAir();renderMain();requestSolve();
+$('airDesign').addEventListener('click',()=>{S.air.mode='design';S.solved=null;solveTok++;$('airNote').textContent='';renderAir();syncControls();renderMain();save()});
+$('airTarget').addEventListener('click',()=>{S.air.mode='target';renderAir();save();requestSolve()});
+$('wallRange').addEventListener('input',()=>{S.air.minWall=+$('wallRange').value;MIN_WALL=S.air.minWall;cacheKey='';renderAir();renderMain();save();requestSolve(200);refreshCards()});
+$('airRange').addEventListener('input',()=>{S.air.target=+$('airRange').value;renderAir();save();requestSolve(200)});
+document.querySelectorAll('.airq').forEach(b=>b.addEventListener('click',()=>{S.air.target=+b.dataset.v;renderAir();save();requestSolve()}));
+$('bSvg').addEventListener('click',exportSvg);
+$('bStl').addEventListener('click',exportStl);
+$('bGuide').addEventListener('click',()=>{S.guides=!S.guides;$('guides').style.display=S.guides?'':'none';$('bGuide').classList.toggle('on',S.guides)});
+cardJobs=[...buildCards(PRESETS_NEW,$('cardsNew')),...buildCards(PRESETS_OLD,$('cardsOld'))];runJobs(cardJobs);
+setTimeout(()=>{ensureManifold().catch(e=>console.warn('manifold preload failed',e))},2500);
+</script>
+</body>
+</html>
