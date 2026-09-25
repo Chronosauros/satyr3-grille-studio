@@ -1,0 +1,5 @@
+{
+  "name": "satyr3-grille-studio",
+  "private": true,
+  "scripts": { "test": "node --test scripts/regression.test.cjs" }
+}
