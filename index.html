@@ -65,7 +65,7 @@ button{font-family:inherit;-webkit-tap-highlight-color:transparent}
 .stage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px 20px;flex-wrap:wrap}
 .nameplate{font-weight:700;font-size:clamp(26px,2.4vw,34px);letter-spacing:-.025em;line-height:1.05;text-shadow:var(--head)}
 .nameplate small{display:block;font-weight:400;font-size:15px;letter-spacing:0;color:var(--ghost);margin-top:6px;text-shadow:none}
-.mats{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:22px}
+.mats{display:flex;gap:26px 10px;flex-wrap:wrap;padding-bottom:22px}
 .chip{width:48px;height:48px;border:0;border-radius:0;cursor:pointer;padding:0;position:relative;
   box-shadow:inset 0 0 0 1px rgba(var(--fg-rgb),.18),0 1px 0 rgba(var(--fg-rgb),.24);
   transition:box-shadow .25s,transform .12s}
@@ -79,6 +79,15 @@ button{font-family:inherit;-webkit-tap-highlight-color:transparent}
 .chip.on span{opacity:1}
 .mats .chip:first-child span{left:0;transform:none}
 .mats .chip:last-child span{left:auto;right:0;transform:none}
+/* own colour: the swatch opens the native picker, the hex field sits in a well beside it */
+.custom{display:flex;gap:10px;align-items:flex-start}
+.chip.cust input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer}
+.chip.cust:focus-within{outline:2px solid var(--ink);outline-offset:3px}
+.hex{width:100px;height:48px;border:0;border-radius:0;padding:0 10px;margin:0;font:500 14px var(--mono);letter-spacing:.02em;color:var(--ink);
+  background:var(--well-bg);box-shadow:var(--well);text-transform:uppercase}
+.hex::placeholder{color:var(--ghost)}
+.hex:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.hex.bad{box-shadow:inset 0 0 0 2px var(--acc),var(--well);color:var(--acc)}
 
 .viewport{background:var(--paper-lo);box-shadow:var(--well);
   display:flex;justify-content:center;padding:clamp(14px,3vw,36px);margin-top:14px}
@@ -214,28 +223,23 @@ footer a:hover,.credit a:hover{color:var(--acc)}
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <!-- matte relief: single directional light from top-left, diffuse only -->
+    <!-- printed face: one directional light from top-left, diffuse only. The rounded edge comes from the
+         blurred outline; the textured-bed grain is a baked bump map lit by the same light (see bakeBed). -->
     <filter id="tactile" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="0.42" result="blur"/>
-      <feDiffuseLighting in="blur" surfaceScale="2.4" diffuseConstant="1.2" lighting-color="#ffffff" result="diff">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" result="blur"/>
+      <feDiffuseLighting in="blur" surfaceScale="2.1" diffuseConstant="1.28" lighting-color="#ffffff" result="diff">
         <feDistantLight azimuth="225" elevation="50"/>
       </feDiffuseLighting>
-      <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="4" result="noise"/>
-      <feColorMatrix in="noise" type="matrix" values="0.22 0 0 0 0.84  0.22 0 0 0 0.84  0.22 0 0 0 0.84  0 0 0 0 1" result="grain"/>
       <feBlend in="SourceGraphic" in2="diff" mode="multiply" result="lit"/>
-      <feBlend in="lit" in2="grain" mode="multiply" result="tex"/>
+      <feImage class="bedtex" x="-42" y="-42" width="84" height="84" preserveAspectRatio="none" result="bed"/>
+      <feComposite in="lit" in2="bed" operator="arithmetic" k1="0.24" k2="0.88" k3="0.07" k4="-0.035" result="tex"/>
       <feComposite in="tex" in2="SourceAlpha" operator="in" result="plate"/>
       <feOffset in="SourceAlpha" dx="0.55" dy="0.75" result="off"/>
       <feGaussianBlur in="off" stdDeviation="0.45" result="offb"/>
       <feColorMatrix in="offb" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="plate"/></feMerge>
     </filter>
-    <filter id="grain" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="9" result="noise"/>
-      <feColorMatrix in="noise" type="matrix" values="0.22 0 0 0 0.84  0.22 0 0 0 0.84  0.22 0 0 0 0.84  0 0 0 0 1" result="g"/>
-      <feBlend in="SourceGraphic" in2="g" mode="multiply" result="t"/>
-      <feComposite in="t" in2="SourceAlpha" operator="in"/>
-    </filter>
+    <path id="plateGeo" fill-rule="evenodd"/>
     <filter id="soft"><feGaussianBlur stdDeviation="1.1"/></filter>
     <linearGradient id="chamf" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0.12" class="chi"/><stop offset="0.9" class="clo"/>
@@ -261,7 +265,9 @@ footer a:hover,.credit a:hover{color:var(--acc)}
         <svg id="main" viewBox="-50 -50 100 100" role="img" aria-label="Grille preview">
           <circle r="47.4" cx="1.3" cy="1.8" fill="rgba(0,0,0,.35)" filter="url(#soft)"/>
           <circle r="40.2" fill="url(#cavity)"/>
-          <path id="chamfer" class="mat" fill="url(#chamf)" style="fill:url(#chamf)" fill-rule="evenodd" filter="url(#grain)"/>
+          <g id="walls"></g>
+          <path id="chamfer" class="mat" fill="url(#chamf)" style="fill:url(#chamf)" fill-rule="evenodd"/>
+          <g id="layers" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="0.07"></g>
           <circle r="47" fill="none" stroke="#161513" stroke-width="0.35"/>
           <path id="plate" class="mat" fill-rule="evenodd" filter="url(#tactile)"/>
           <circle r="40" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="0.25"/>
@@ -320,7 +326,7 @@ footer a:hover,.credit a:hover{color:var(--acc)}
   <section class="gal">
     <div class="gal-head">
       <h2>Presets</h2>
-      <p id="galInfo">17 designs</p>
+      <p id="galInfo">23 designs</p>
     </div>
     <div class="cards" id="cardsNew"></div>
   </section>
@@ -353,6 +359,19 @@ function bufferLine(pts,w){
   for(let i=n-1;i>=0;i--)out.push([pts[i][0]+d[i][1]*r,pts[i][1]-d[i][0]*r]);
   const a0=Math.atan2(d[0][1],d[0][0]);
   for(let k=1;k<12;k++){const a=a0-Math.PI/2-Math.PI*k/12;out.push([pts[0][0]+r*Math.cos(a),pts[0][1]+r*Math.sin(a)])}
+  return out;
+}
+// buffer with a width per point (tapered slot), round caps
+function bufferVar(pts,ws){
+  const n=pts.length,d=[];
+  for(let i=0;i<n;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)];const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1e-9;d.push([dx/l,dy/l])}
+  const out=[];
+  for(let i=0;i<n;i++){const r=ws[i]/2;out.push([pts[i][0]-d[i][1]*r,pts[i][1]+d[i][0]*r])}
+  const ae=Math.atan2(d[n-1][1],d[n-1][0]),re=ws[n-1]/2;
+  for(let k=1;k<12;k++){const a=ae+Math.PI/2-Math.PI*k/12;out.push([pts[n-1][0]+re*Math.cos(a),pts[n-1][1]+re*Math.sin(a)])}
+  for(let i=n-1;i>=0;i--){const r=ws[i]/2;out.push([pts[i][0]+d[i][1]*r,pts[i][1]-d[i][0]*r])}
+  const a0=Math.atan2(d[0][1],d[0][0]),r0=ws[0]/2;
+  for(let k=1;k<12;k++){const a=a0-Math.PI/2-Math.PI*k/12;out.push([pts[0][0]+r0*Math.cos(a),pts[0][1]+r0*Math.sin(a)])}
   return out;
 }
 function stadium(ax,ay,bx,by,w){return Math.hypot(bx-ax,by-ay)<0.05?circlePoly((ax+bx)/2,(ay+by)/2,w/2):bufferLine([[ax,ay],[bx,by]],w)}
@@ -533,8 +552,149 @@ const GEN_NEW={
       polys.push(...loopSlots(loop,{bridges:p.bridges,phase:p.bond&&(k&1)?0.5:0,gap:p.bridge+w,rClip:rC,w,minLen:Math.max(2,w)}));
     }
     return {polys,note:''};
+  },
+  nature(p){
+    const g=NATURE[Math.round(p.motif)]||NATURE[0],res=g(p),a=p.rot*Math.PI/180;
+    if(a)res.polys=res.polys.map(q=>rot(q,a));
+    return res;
   }
 };
+
+/* ---------- nature motifs: seeded, open holes only, every wall measured ---------- */
+// keep the side of a line where n.x <= c
+function clipHalf(poly,nx,ny,c){
+  const out=[];
+  for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],da=a[0]*nx+a[1]*ny-c,db=b[0]*nx+b[1]*ny-c;
+    if(da<=0)out.push(a);
+    if((da<0&&db>0)||(da>0&&db<0)){const t=da/(da-db);out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t])}}
+  return out;
+}
+function ccw(poly){return area(poly)<0?poly.slice().reverse():poly}
+function dedupe(poly){const o=[];for(const p of poly){const q=o[o.length-1];if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>1e-4)o.push(p)}if(o.length>1&&Math.hypot(o[0][0]-o[o.length-1][0],o[0][1]-o[o.length-1][1])<1e-4)o.pop();return o}
+function clipConvex(poly,clip){
+  for(let i=0;i<clip.length&&poly.length>2;i++){const a=clip[i],b=clip[(i+1)%clip.length],nx=b[1]-a[1],ny=a[0]-b[0];poly=clipHalf(poly,nx,ny,nx*a[0]+ny*a[1])}
+  return poly;
+}
+// morphological opening of a convex polygon: shrink by r, grow back with arcs - corners get radius r, edges stay put
+function roundConvex(poly,r){
+  poly=ccw(dedupe(poly));if(poly.length<3)return null;
+  if(r<0.05)return poly;
+  let q=poly;
+  for(let i=0;i<poly.length&&q.length>2;i++){const a=poly[i],b=poly[(i+1)%poly.length],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(l<1e-6)continue;const nx=(b[1]-a[1])/l,ny=(a[0]-b[0])/l;q=clipHalf(q,nx,ny,nx*a[0]+ny*a[1]-r)}
+  q=dedupe(q);if(q.length<3||area(q)<1e-3)return null;
+  const n=q.length,nor=[],out=[];
+  for(let i=0;i<n;i++){const a=q[i],b=q[(i+1)%n],l=Math.hypot(b[0]-a[0],b[1]-a[1]);nor.push(Math.atan2(a[0]-b[0],b[1]-a[1])+0*l)}
+  for(let i=0;i<n;i++){let a1=nor[(i-1+n)%n],a2=nor[i];while(a2<a1)a2+=2*Math.PI;const k=Math.max(1,Math.ceil((a2-a1)/(Math.PI/12)));
+    for(let j=0;j<=k;j++){const t=a1+(a2-a1)*j/k;out.push([q[i][0]+r*Math.cos(t),q[i][1]+r*Math.sin(t)])}}
+  return dedupe(out);
+}
+function perim(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=Math.hypot(b[0]-a[0],b[1]-a[1])}return s}
+// Voronoi cells pulled back from every bisector by wall/2, clipped to the reach, corners rounded
+function wallCells(seeds,wall,reachN,rnd){
+  const clipC=circlePoly(0,0,REACH,180),polys=[],cellSz=3.6,grid=new Map();
+  seeds.forEach((s,i)=>{const k=Math.floor(s[0]/cellSz)+','+Math.floor(s[1]/cellSz);if(!grid.has(k))grid.set(k,[]);grid.get(k).push(i)});
+  const R=Math.ceil(reachN/cellSz);
+  seeds.forEach((p,i)=>{
+    if(Math.hypot(p[0],p[1])>REACH+reachN*0.25)return;
+    const h=reachN;let poly=[[p[0]-h,p[1]-h],[p[0]+h,p[1]-h],[p[0]+h,p[1]+h],[p[0]-h,p[1]+h]];
+    const gx=Math.floor(p[0]/cellSz),gy=Math.floor(p[1]/cellSz);
+    for(let dx=-R;dx<=R;dx++)for(let dy=-R;dy<=R;dy++){const c=grid.get((gx+dx)+','+(gy+dy));if(!c)continue;
+      for(const j of c){if(j===i)continue;const q=seeds[j],ex=q[0]-p[0],ey=q[1]-p[1],d=Math.hypot(ex,ey);if(d>reachN||d<1e-6)continue;
+        const nx=ex/d,ny=ey/d;poly=clipHalf(poly,nx,ny,nx*p[0]+ny*p[1]+d/2-wall/2);if(poly.length<3)return}}
+    poly=clipConvex(poly,clipC);if(poly.length<3)return;
+    const ar=Math.abs(area(poly));if(ar<3)return;
+    let rr=rnd(p,poly),out=null;
+    for(let t=0;t<5&&!out;t++){out=roundConvex(poly,rr);rr*=0.55}
+    if(!out)out=ccw(dedupe(poly));
+    if(out.length<3||2*Math.abs(area(out))/perim(out)<1.0)return; // narrower than about 2 mm: leave it solid
+    polys.push(out);
+  });
+  return polys;
+}
+// point sets sorted by x: nearest pair within the window |dx| < need
+function gapX(A,B,need){
+  let m=Infinity,j0=0;
+  for(const a of A){while(j0<B.length&&B[j0][0]<a[0]-need)j0++;
+    for(let j=j0;j<B.length&&B[j][0]<=a[0]+need;j++){const d=Math.hypot(a[0]-B[j][0],a[1]-B[j][1]);if(d<m)m=d}}
+  return m;
+}
+function searchMin(ok,lo,hi){if(ok(lo))return lo;for(let k=0;k<22;k++){const m=(lo+hi)/2;if(ok(m))hi=m;else lo=m}return hi}
+// centre-line with arclength -> slots, broken by bridges, clipped to the reach
+function runSlots(pts,sArr,o){
+  const out=[];let run=[],last=null;
+  const flush=()=>{if(run.length>1&&lineLen(run)>=o.minLen){out.push(bufferLine(run,o.w));last=run[run.length-1]}run=[]};
+  for(let i=0;i<pts.length;i++){const u=((sArr[i]-o.phase)%o.per+o.per)%o.per;
+    // a slot may restart only a full bridge away from the previous one, also after dipping out of the reach
+    if(u>=o.gap&&Math.hypot(pts[i][0],pts[i][1])<=o.rClip&&(run.length||!last||Math.hypot(pts[i][0]-last[0],pts[i][1]-last[1])>=o.gap))run.push(pts[i]);else flush()}
+  flush();
+  return out;
+}
+const NATURE=[
+  // Leaf: pinnate veins off a solid midrib, bending to the tip; the veins are the walls, broken into areoles
+  function leaf(p){
+    const w=p.slotW,hw=w/2,rC=REACH-hw,mid=Math.max(3.2,p.wall*1.6),a0=36*Math.PI/180,bend=p.flow*0.8,ds=0.3;
+    // veins are vertical copies of one curve: as they bend they close in, so each slot tapers to keep the wall and stops at 2 mm
+    const C=[],S=[],TH=[];let x=0,y=0;
+    for(let s=0;x<REACH+2&&s<4*REACH;s+=ds){const th=Math.min(1.35,a0+bend*Math.min(1.2,s/REACH));C.push([x,y]);S.push(s);TH.push(th);x+=Math.cos(th)*ds;y-=Math.sin(th)*ds}
+    const thm=Math.min(1.35,a0+bend*0.8),pv=(w+p.wall)/(0.96*Math.cos(thm)),W=C.map(q=>{let d=Infinity;for(const t of C){const e=Math.hypot(q[0]-t[0],q[1]-t[1]-pv);if(e<d)d=e}return Math.min(9,d-p.wall-0.12)});
+    const ymax=-C[C.length-1][1],gap=p.wall*1.05+Math.max(...W),per=p.seg+gap,polys=[];
+    for(const sd of [1,-1]){const os=sd<0?pv/2:0,k0=Math.floor(-REACH/pv)-1,k1=Math.ceil((REACH+ymax)/pv)+1;
+      for(let k=k0;k<=k1;k++){const yk=k*pv+os,ph=((k&1)?per/2:0)+(sd<0?per/4:0)-gap;let run=[],rw=[];
+        const flush=()=>{if(run.length>1&&lineLen(run)>=1.2)polys.push(bufferVar(run,rw));run=[];rw=[]};
+        for(let i=0;i<C.length;i++){const pt=[sd*(mid/2+W[0]/2+C[i][0]),yk+C[i][1]],u=((S[i]-ph)%per+per)%per;
+          if(W[i]>=2&&u>=gap&&Math.hypot(pt[0],pt[1])+W[i]/2<=REACH){run.push(pt);rw.push(W[i])}else flush()}
+        flush()}}
+    return {polys,note:'vein pitch '+pv.toFixed(1)+' mm along the midrib'};
+  },
+  // Crackle: dried clay / giraffe coat - jittered cells, the seams are the walls
+  function crackle(p){
+    const s=p.cell,rng=prng(p.seed*9173+29),seeds=[],J=Math.ceil((REACH+2*s)/(s*0.866)),I=Math.ceil((REACH+2*s)/s);
+    for(let j=-J;j<=J;j++)for(let i=-I;i<=I;i++){const a=rng()*2*Math.PI,d=p.flow*0.42*s*Math.sqrt(rng());
+      seeds.push([i*s+((j&1)?s/2:0)+d*Math.cos(a),j*s*0.866+d*Math.sin(a)])}
+    const polys=wallCells(seeds,p.wall,s*2.6,()=>p.soft*s*0.34);
+    return {polys,note:polys.length+' plates'};
+  },
+  // Pine cone: phyllotaxis seeds (137.5°) as Voronoi scales that grow toward the rim
+  function cone(p){
+    const g=0.5+p.flow*0.25,A=p.cell*p.cell*0.866,r0=REACH*0.55,c=r0/Math.pow(2*Math.PI*r0*r0*g/A,g),seeds=[],ga=Math.PI*(3-Math.sqrt(5));
+    const spAt=r=>Math.sqrt(2*Math.PI*r*r*g/Math.pow(Math.max(r,0.5)/c,1/g)/0.866),rMax=REACH+2*spAt(REACH);
+    for(let n=0;n<4000;n++){const r=c*Math.pow(n+0.5,g);if(r>rMax)break;seeds.push([r*Math.cos(n*ga),r*Math.sin(n*ga)])}
+    const polys=wallCells(seeds,p.wall,spAt(REACH)*2.6,q=>p.soft*spAt(Math.hypot(q[0],q[1]))*0.34);
+    return {polys,note:polys.length+' scales'};
+  },
+  // Ripple: wind ripples on sand - sinuous crests, every row spaced to keep the wall
+  function ripple(p){
+    const w=p.slotW,hw=w/2,rC=REACH-hw,kx=2*Math.PI/p.cell,rng=prng(p.seed*6151+17);
+    const A=Math.min(p.flow*p.cell*0.16,1/(kx*kx*1.9*(hw+0.35))),need=w+p.wall+0.05,xs=[];
+    for(let x=-rC-0.5;x<=rC+0.5;x+=0.25)xs.push(x);
+    let ph=rng()*6.3;
+    const row=()=>{ph+=0.55+(rng()-0.5)*0.9;const f=ph,ps=rng()*6.3,h2=0.18+0.12*rng();return xs.map(x=>[x,A*(Math.sin(kx*x+f)+h2*Math.sin(2*kx*x+ps))*(0.72+0.28*Math.sin(kx*x/3.3+ps))])};
+    const rows=[{pts:row(),y:0}];
+    for(const dir of [1,-1]){let prev=rows[0];
+      for(let k=0;k<40&&Math.abs(prev.y)-A<rC;k++){const c=row(),dy=searchMin(v=>gapX(prev.pts.map(q=>[q[0],q[1]+prev.y]),c.map(q=>[q[0],q[1]+prev.y+dir*v]),need)>=need,need,need*3);
+        prev={pts:c,y:prev.y+dir*dy};rows.push(prev)}}
+    const gap=p.wall*1.05+w,per=p.seg+gap,polys=[],S=xs.map(x=>x);
+    for(const r of rows){const pts=r.pts.map(q=>[q[0],q[1]+r.y]);polys.push(...runSlots(pts,S,{per,phase:rng()*per,gap,rClip:rC,w,minLen:Math.max(1.2,w*0.5)}))}
+    return {polys,note:'crest height '+(A*2).toFixed(1)+' mm'};
+  },
+  // Bark: lens-shaped fissures in staggered columns, the ridges between them interlace
+  function bark(p){
+    const w=p.slotW,rng=prng(p.seed*3301+5),L=p.seg,wv=p.flow*1.8,lam=24,sl=wv*2*Math.PI/lam;
+    const px=(w+p.wall*Math.sqrt(1+sl*sl))*1.02,gx=y=>wv*Math.sin(2*Math.PI*y/lam+0.7),polys=[],N=Math.ceil(REACH/px)+1;
+    for(let i=-N;i<=N;i++){
+      const xc=i*px,e=Math.abs(xc)+wv+w/2+0.05;if(e>=REACH-1)continue;
+      const Yc=Math.sqrt(REACH*REACH-e*e);let y=-Yc-rng()*L;
+      while(y<Yc){
+        const len=L*(0.55+0.9*rng()),y0=Math.max(y,-Yc),y1=Math.min(y+len,Yc),wd=w*(0.82+0.18*rng());
+        if(y1-y0>=Math.max(2.2*w,4)){const M=Math.max(8,Math.ceil((y1-y0)/0.3)),R=[],Lf=[];
+          for(let k=0;k<=M;k++){const t=k/M,yy=y0+t*(y1-y0),h=wd/2*Math.pow(Math.sin(Math.PI*t),0.55),xx=xc+gx(yy);R.push([xx+h,yy]);if(k>0&&k<M)Lf.push([xx-h,yy])}
+          polys.push(R.concat(Lf.reverse()))}
+        y+=len+p.wall*(1.1+0.6*rng());
+      }
+    }
+    return {polys,note:''};
+  }
+];
 
 /* ---------- earlier families (18.07 studio, unchanged) ---------- */
 const GEN_OLD={
@@ -672,6 +832,18 @@ const TYPES={
   facade:{label:'Facade',about:'Barbican balconies and stacked slabs - seeded rhythm of long and short openings.',ctrl:[['slotW','Slab height',2.2,5,0.1,'mm'],['wall','Floor band',1.2,4,0.1,'mm'],['minLen','Shortest',4,14,0.5,'mm'],['maxLen','Longest',12,44,0.5,'mm'],['bridge','Pier',2,5,0.1,'mm'],['density','Openings',0.5,1,0.05],['tall','Tall floors',0,0.6,0.05],['corner','Corner radius',0,1.5,0.1,'mm'],['seed','Seed',1,99,1]],def:{slotW:3,wall:2.2,minLen:5,maxLen:20,bridge:2.4,density:0.88,tall:0.3,corner:0.6,seed:5}},
   bakelite:{label:'Bakelite',about:'Vintage valve radio and rotary dial - rings of round holes shrinking outward.',ctrl:[['dMax','Centre hole',3,9,0.1,'mm'],['dMin','Edge hole',2,5,0.1,'mm'],['wall','Wall',1.2,3,0.1,'mm'],['center','Centre hole',0,1,1,'',OFF_ON],['aligned','Spokes',0,1,1,'',['Staggered','Aligned']],['spokes','Spoke count',6,12,1]],def:{dMax:4.6,dMin:2.6,wall:2,center:1,aligned:0,spokes:8}},
   terrace:{label:'Terrace',about:'70s squircle rings and stepped Panton forms, clipped by the round face.',ctrl:[['sq','Squareness',2.4,5,0.1],['slotW','Slot width',2,4.5,0.1,'mm'],['wall','Step',1.2,3.5,0.1,'mm'],['bridges','Bridges / ring',3,8,1],['bridge','Bridge',2,4,0.1,'mm'],['bond','Brick bridges',0,1,1,'',OFF_ON],['core','Solid core',5,14,0.5,'mm']],def:{sq:4,slotW:2.4,wall:2.2,bridges:4,bridge:2.4,bond:1,core:6}},
+  nature:{label:'Nature',about:'Leaf veins, dried clay, pine cone scales, sand ripples and bark - read as open holes and solid walls, not ornament.',
+    aboutBy:['Leaf - pinnate veins off a solid midrib, bending toward the tip; the veins are the walls.','Crackle - dried clay and giraffe coat: jittered cells, the seams are the walls.','Pine cone - phyllotaxis scales at 137.5°, growing toward the rim.','Ripple - wind ripples on a dune: sinuous crests, each row spaced to keep the wall.','Bark - lens-shaped fissures in staggered columns, the ridges interlace.'],
+    ctrl:[['motif','Motif',0,4,1,'',['Leaf','Crackle','Pine cone','Ripple','Bark']],
+      ['slotW','Slot width',2,4.5,0.1,'mm',null,{m:[0,3,4],lab:{0:'Slot at margin',4:'Fissure width'}}],
+      ['cell','Cell size',6,16,0.25,'mm',null,{m:[1,2,3],lab:{1:'Plate size',2:'Scale size',3:'Wavelength'}}],
+      ['wall','Wall',1.2,4,0.1,'mm',null,{lab:{0:'Vein wall',1:'Seam wall',4:'Ridge'}}],
+      ['flow','Flow',0,1,0.05,'',null,{lab:{0:'Vein curve',1:'Irregularity',2:'Growth',3:'Ripple height',4:'Waviness'}}],
+      ['soft','Rounding',0,1,0.05,'',null,{m:[1,2]}],
+      ['seg','Segment',6,40,0.5,'mm',null,{m:[0,3,4],lab:{0:'Vein segment',3:'Crest length',4:'Fissure length'}}],
+      ['seed','Seed',1,99,1,'',null,{m:[1,3,4]}],
+      ['rot','Rotation',0,90,1,'°']],
+    def:{motif:0,slotW:2.4,cell:9,wall:2.2,flow:0.55,soft:0.4,seg:16,seed:7,rot:0}},
   waves:{old:1,label:'Waves / Moiré',about:'Earlier family (18.07).',ctrl:[['rings','Rings',3,10,1],['amp','Wave amplitude',0,3,0.1,'mm'],['lobes','Wave lobes',3,12,1],['slotW','Slot width',2,4,0.1,'mm'],['bridges','Bridges / ring',2,6,1]],def:{rings:7,amp:1.2,lobes:6,slotW:2.6,bridges:3}},
   vortex:{old:1,label:'Vortex',about:'Earlier family (18.07).',ctrl:[['arms','Arms',6,24,1],['twist','Twist',40,400,10,'°'],['slotW','Slot width',2,4,0.1,'mm']],def:{arms:14,twist:220,slotW:2.6}},
   hex:{old:1,label:'Hex lattice',about:'Earlier family (18.07).',ctrl:[['cell','Cell size',3,8,0.25,'mm'],['wall','Wall',1.2,4,0.05,'mm'],['round','Corner rounding',0,1,0.05],['rot','Rotation',0,30,1,'°']],def:{cell:5.5,wall:2,round:0.25,rot:0}},
@@ -696,7 +868,13 @@ const PRESETS_NEW=[
   {name:'Bakelite',type:'bakelite',about:'Valve radio speaker, staggered rings',par:{dMax:4.6,dMin:2.6,wall:2,center:1,aligned:0,spokes:8}},
   {name:'Dial',type:'bakelite',about:'Rotary telephone, aligned spokes',par:{dMax:6.6,dMin:3.2,wall:2.4,center:1,aligned:1,spokes:10}},
   {name:'Terrace',type:'terrace',about:'Squircle steps with brick bridges',par:{sq:4,slotW:2.4,wall:2.2,bridges:4,bridge:2.4,bond:1,core:6}},
-  {name:'Tube TV',type:'terrace',about:'Soft CRT-screen rings',par:{sq:3,slotW:2.8,wall:2.4,bridges:4,bridge:2.6,bond:0,core:8}}
+  {name:'Tube TV',type:'terrace',about:'Soft CRT-screen rings',par:{sq:3,slotW:2.8,wall:2.4,bridges:4,bridge:2.6,bond:0,core:8}},
+  {name:'Beech Leaf',type:'nature',about:'Pinnate veins bending to the tip, solid midrib',par:{motif:0,slotW:2.4,wall:2.2,flow:0.7,seg:22,rot:0}},
+  {name:'Dry Lake',type:'nature',about:'Sun-cracked clay, thin sharp seams',par:{motif:1,cell:8,wall:2,flow:0.9,soft:0.12,seed:7,rot:0}},
+  {name:'Giraffe',type:'nature',about:'Rounded coat patches, heavy seams',par:{motif:1,cell:12,wall:3,flow:0.6,soft:0.75,seed:3,rot:0}},
+  {name:'Pine Cone',type:'nature',about:'Phyllotaxis scales growing to the rim',par:{motif:2,cell:8.5,wall:2.2,flow:0.6,soft:0.45,rot:0}},
+  {name:'Sand Ripple',type:'nature',about:'Wind ripples on a dune, broken crests',par:{motif:3,slotW:2.4,wall:2.2,cell:11,flow:0.75,seg:30,seed:4,rot:0}},
+  {name:'Oak Bark',type:'nature',about:'Deep lens fissures, interlaced ridges',par:{motif:4,slotW:3,wall:2.3,flow:0.5,seg:15,seed:9,rot:0}}
 ];
 const PRESETS_OLD=[
   {name:'Ripple',type:'waves',par:{rings:7,amp:1.2,lobes:6,slotW:2.6,bridges:3}},
@@ -718,6 +896,18 @@ const MATS={
   concrete:{name:'Concrete',mat:'#b9b4aa',hi:'#dedad2',lo:'#5f5b54',cav:'#1a1816'},
   oxide:{name:'Oxide',mat:'#c65a2e',hi:'#e8916a',lo:'#5e2410',cav:'#1a1816'}
 };
+// own filament colour from a hex: light and shade keep the hue, lift stays visible on black, white stays white
+function parseHex(s){s=String(s||'').trim().replace(/^#/,'');if(/^[0-9a-f]{3}$/i.test(s))s=s.replace(/./g,c=>c+c);return /^[0-9a-f]{6}$/i.test(s)?'#'+s.toUpperCase():null}
+function hsl2hex(h,s,l){const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l),c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(Math.min(1,Math.max(0,c))*255).toString(16).padStart(2,'0')};return '#'+f(0)+f(8)+f(4)}
+function deriveMat(hex){
+  const n=parseInt(hex.slice(1),16),r=(n>>16&255)/255,g=(n>>8&255)/255,b=(n&255)/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;
+  if(d>1e-6){s=d/(1-Math.abs(2*l-1));h=mx===r?((g-b)/d+6)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h/=6}
+  const lum=0.2126*r+0.7152*g+0.0722*b;
+  return {name:hex,mat:hex,hi:hsl2hex(h,s*0.85,Math.min(1,l+0.14+0.25*l*(1-l))),lo:hsl2hex(h,Math.min(1,s*1.1),l*(0.3+0.25*l)),cav:lum<0.3?'#8f897e':'#1a1816'};
+}
+let customHex='#2E3A4F'; // replaced by the saved one once storage helpers exist
+function getMat(k){return k==='custom'?deriveMat(customHex):MATS[k]}
 
 // Air: each family maps t in [0,1] to hole-vs-wall parameters; the solver searches t for a target open area
 const AIR={
@@ -729,6 +919,7 @@ const AIR={
   facade:{keys:['slotW','wall'],f:t=>({slotW:2.2+2.8*t,wall:4-(4-MIN_WALL)*t})},
   bakelite:{keys:['dMax','dMin','wall'],f:t=>({dMax:3+6*t,dMin:2+3*t,wall:3-(3-MIN_WALL)*t})},
   terrace:{keys:['slotW','wall'],f:t=>({slotW:2+2.5*t,wall:3.5-(3.5-MIN_WALL)*t})},
+  nature:{keys:['slotW','wall'],f:t=>({slotW:2+2.2*t,wall:3.4-(3.4-MIN_WALL)*t})},
   waves:{keys:['slotW'],f:t=>({slotW:2+2*t})},
   vortex:{keys:['slotW'],f:t=>({slotW:2+2*t})},
   hex:{keys:['cell','wall'],f:t=>({cell:3+5*t,wall:3-(3-MIN_WALL)*t})},
@@ -772,7 +963,8 @@ const LS='satyr3-retro:';
 function lsGet(k){try{return localStorage.getItem(LS+k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(LS+k,v)}catch(e){}}
 const S={type:'breeze',preset:'Breeze Block',mat:'beige',guides:false,air:{mode:'design',target:54,minWall:2},solved:null,params:Object.fromEntries(Object.entries(TYPES).map(([k,v])=>[k,{...v.def}]))};
-try{const saved=JSON.parse(lsGet('state')||'null');if(saved&&TYPES[saved.type]){S.type=saved.type;S.preset=saved.preset||'';S.mat=MATS[saved.mat]?saved.mat:S.mat;if(saved.air&&(saved.air.mode==='design'||saved.air.mode==='target'))S.air={mode:saved.air.mode,target:Math.min(60,Math.max(25,Math.round(+saved.air.target)||54)),minWall:Math.min(3,Math.max(1.2,+saved.air.minWall||2))};for(const k in saved.params||{})if(S.params[k])Object.assign(S.params[k],saved.params[k])}}catch(e){}
+customHex=parseHex(lsGet('custom'))||customHex;
+try{const saved=JSON.parse(lsGet('state')||'null');if(saved&&TYPES[saved.type]){S.type=saved.type;S.preset=saved.preset||'';S.mat=(MATS[saved.mat]||saved.mat==='custom')?saved.mat:S.mat;if(saved.air&&(saved.air.mode==='design'||saved.air.mode==='target'))S.air={mode:saved.air.mode,target:Math.min(60,Math.max(25,Math.round(+saved.air.target)||54)),minWall:Math.min(3,Math.max(1.2,+saved.air.minWall||2))};for(const k in saved.params||{})if(S.params[k])Object.assign(S.params[k],saved.params[k])}}catch(e){}
 function save(){lsSet('state',JSON.stringify({type:S.type,preset:S.preset,mat:S.mat,air:S.air,params:S.params}))}
 
 const $=id=>document.getElementById(id);
@@ -806,7 +998,10 @@ function solveAir(){
 }
 function syncControls(){
   const t=TYPES[S.type],par=effParams(),locked=S.air.mode==='target'?AIR[S.type].keys:[];
-  t.ctrl.forEach(c=>{const k=c[0],inp=$('c_'+k),out=$('o_'+k);if(!inp)return;const lock=locked.includes(k);inp.disabled=lock;inp.value=par[k];out.textContent=valText(c,par[k])+(lock?' · air':'');inp.closest('.ctrl').classList.toggle('locked',lock)});
+  const mo=Math.round(par.motif||0);
+  t.ctrl.forEach(c=>{const k=c[0],inp=$('c_'+k),out=$('o_'+k);if(!inp)return;const lock=locked.includes(k);inp.disabled=lock;inp.value=par[k];out.textContent=valText(c,par[k])+(lock?' · air':'');
+    const box=inp.closest('.ctrl'),meta=c[7];box.classList.toggle('locked',lock);
+    if(meta){box.hidden=!!meta.m&&!meta.m.includes(mo);box.querySelector('label').textContent=(meta.lab&&meta.lab[mo])||c[1]}});
 }
 function renderAir(){
   const tg=S.air.mode==='target';
@@ -817,13 +1012,27 @@ function renderAir(){
 }
 
 function applyMat(){
-  const m=MATS[S.mat],r=document.documentElement.style;
+  const m=getMat(S.mat)||MATS.beige,r=document.documentElement.style;
   r.setProperty('--mat',m.mat);r.setProperty('--mat-hi',m.hi);r.setProperty('--mat-lo',m.lo);r.setProperty('--cavity',m.cav);
   document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.m===S.mat));
+  const cc=document.querySelector('.chip.cust');if(cc){cc.style.background=customHex;cc.querySelector('span').textContent=customHex;cc.querySelector('input').value=customHex.toLowerCase()}
+}
+function buildCustom(){
+  const box=document.createElement('div');box.className='custom';
+  box.innerHTML='<label class="chip cust" data-m="custom" title="Own colour - opens the colour picker"><input type="color" aria-label="Own filament colour"><span></span></label><input class="hex" id="hexIn" type="text" inputmode="text" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Own colour as hex, #RRGGBB" placeholder="#RRGGBB">';
+  $('mats').appendChild(box);
+  const pick=box.querySelector('input[type=color]'),hex=$('hexIn');
+  const use=h=>{customHex=h;lsSet('custom',h);S.mat='custom';applyMat();save()};
+  hex.value=customHex;
+  pick.addEventListener('click',()=>{if(S.mat!=='custom')use(customHex)});
+  pick.addEventListener('input',()=>{const h=parseHex(pick.value);if(!h)return;hex.value=h;hex.classList.remove('bad');use(h)});
+  hex.addEventListener('input',()=>{const v=hex.value.trim(),h=parseHex(v);hex.classList.toggle('bad',!!v&&!h);hex.setAttribute('aria-invalid',!!v&&!h?'true':'false');if(h)use(h)});
+  hex.addEventListener('change',()=>{const h=parseHex(hex.value);if(h)hex.value=h});
+  hex.addEventListener('keydown',e=>{if(e.key==='Enter')hex.blur()});
 }
 function renderMain(){
   let g;try{g=current()}catch(e){console.warn(e);g={polys:[],open:0,wall:Infinity,note:'generation error: '+(e.message||e)}}
-  $('plate').setAttribute('d',circleD(TOP_R)+' '+toD(g.polys));
+  const pd=circleD(TOP_R)+' '+toD(g.polys);$('plate').setAttribute('d',pd);$('plateGeo').setAttribute('d',pd);
   $('sOpen').textContent=(g.open*100).toFixed(1)+' %';
   $('sBar').style.width=Math.min(100,g.open*100)+'%';
   $('sHoles').textContent=g.polys.length;
@@ -832,8 +1041,39 @@ function renderMain(){
   $('note').textContent=g.note||'';
   const t=TYPES[S.type];
   $('nameplate').innerHTML=(S.preset||t.label)+'<small>'+(S.preset?t.label:'custom settings')+(airOn()?' · air '+S.air.target+' %':' · design air')+'</small>';
-  $('about').textContent=t.about;
+  $('about').textContent=t.aboutBy?(t.aboutBy[Math.round(effParams().motif)]||t.about):t.about;
   document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',c.dataset.p===S.preset));
+}
+/* ---------- print texture ---------- */
+// Hole walls: the 2 mm plate seen a little from the light's side, so the far wall of every hole shows as ten
+// 0.2 mm layers - copies of the outline stepped toward the viewer, a touch darker with depth, alternate grooves.
+const WALL_V=[-0.3,-0.4],LAYERS=10;
+function buildRelief(){
+  const ns='http://www.w3.org/2000/svg',wg=$('walls'),lg=$('layers');
+  for(let i=LAYERS;i>=1;i--){const f=i/LAYERS,u=document.createElementNS(ns,'use');u.setAttribute('href','#plateGeo');
+    u.setAttribute('transform','translate('+(WALL_V[0]*f).toFixed(3)+' '+(WALL_V[1]*f).toFixed(3)+')');
+    u.style.fill='color-mix(in srgb,var(--mat) '+Math.round(74-20*f-(i&1?7:0))+'%,var(--mat-lo))';wg.appendChild(u)}
+  // chamfer: 45° slope printed in 0.2 mm layers reads as 0.2 mm concentric steps
+  for(let r=TOP_R+0.2;r<47-0.05;r+=0.2){const c=document.createElementNS(ns,'circle');c.setAttribute('r',r.toFixed(2));lg.appendChild(c)}
+}
+// Textured PEI bed: fine isotropic bumps (0.15-0.5 mm) baked once and lit by the same top-left light; the filter
+// multiplies it into the face and adds a small share so the grain still reads on black filament.
+function bakeBed(){
+  try{
+    const N=1024,cv=document.createElement('canvas');cv.width=cv.height=N;const cx=cv.getContext('2d'),im=cx.createImageData(N,N),H=new Float32Array(N*N),rng=prng(77);
+    for(const [s,amp] of [[14,0.1],[3.2,0.42],[1.8,0.55],[1.1,0.3]]){
+      const G=Math.ceil(N/s)+2,L=new Float32Array(G*G);for(let i=0;i<L.length;i++)L[i]=rng()*2-1;
+      for(let y=0;y<N;y++){const fy=y/s,iy=fy|0,ty=fy-iy,sy=ty*ty*(3-2*ty);
+        for(let x=0;x<N;x++){const fx=x/s,ix=fx|0,tx=fx-ix,sx=tx*tx*(3-2*tx),o=iy*G+ix;
+          const a=L[o]+(L[o+1]-L[o])*sx,b=L[o+G]+(L[o+G+1]-L[o+G])*sx;H[y*N+x]+=amp*(a+(b-a)*sy)}}}
+    const lx=-0.4545,ly=-0.4545,lz=0.766,k=0.42,d=im.data;
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,gx=(H[y*N+Math.min(N-1,x+1)]-H[y*N+Math.max(0,x-1)])/2,gy=(H[Math.min(N-1,y+1)*N+x]-H[Math.max(0,y-1)*N+x])/2;
+      const nx=-gx*k,ny=-gy*k,sh=(nx*lx+ny*ly+lz)/Math.sqrt(nx*nx+ny*ny+1)/lz,v=Math.max(0,Math.min(255,Math.round(128+(sh-1)*300)));
+      d[4*i]=d[4*i+1]=d[4*i+2]=v;d[4*i+3]=255}
+    cx.putImageData(im,0,0);
+    const url=cv.toDataURL('image/jpeg',0.92);
+    document.querySelectorAll('feImage.bedtex').forEach(e=>e.setAttribute('href',url));
+  }catch(e){console.warn('bed texture',e)}
 }
 let raf=0;function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderMain()})}
 
@@ -848,7 +1088,7 @@ function buildControls(){
     box.appendChild(d);
     const inp=d.querySelector('input'),out=d.querySelector('output');
     inp.value=par[k];out.textContent=valText(c,par[k]);
-    inp.addEventListener('input',()=>{const v=parseFloat(inp.value);S.params[S.type][k]=v;out.textContent=valText(c,v);S.preset='';schedule();save();requestSolve(250)});
+    inp.addEventListener('input',()=>{const v=parseFloat(inp.value);S.params[S.type][k]=v;out.textContent=valText(c,v);S.preset='';if(k==='motif')syncControls();schedule();save();requestSolve(250)});
   });
   document.querySelectorAll('.key[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===S.type));
   syncControls();
@@ -928,7 +1168,9 @@ for(const [k,m] of Object.entries(MATS)){
   const c=document.createElement('button');c.className='chip';c.dataset.m=k;c.title=m.name;c.style.background=m.mat;c.innerHTML='<span>'+m.name+'</span>';
   c.addEventListener('click',()=>{S.mat=k;applyMat();save()});$('mats').appendChild(c);
 }
+buildCustom();
 $('chamfer').setAttribute('d',circleD(47)+' '+circleD(TOP_R));
+buildRelief();setTimeout(bakeBed,0);
 MIN_WALL=S.air.minWall;
 buildKeys();buildControls();applyMat();initGroups();renderAir();renderMain();requestSolve();
 $('airDesign').addEventListener('click',()=>{S.air.mode='design';S.solved=null;solveTok++;$('airNote').textContent='';renderAir();syncControls();renderMain();save()});
@@ -939,6 +1181,7 @@ document.querySelectorAll('.airq').forEach(b=>b.addEventListener('click',()=>{S.
 $('bSvg').addEventListener('click',exportSvg);
 $('bStl').addEventListener('click',exportStl);
 $('bGuide').addEventListener('click',()=>{S.guides=!S.guides;$('guides').style.display=S.guides?'':'none';$('bGuide').classList.toggle('on',S.guides)});
+$('galInfo').textContent=PRESETS_NEW.length+' designs';
 cardJobs=[...buildCards(PRESETS_NEW,$('cardsNew')),...buildCards(PRESETS_OLD,$('cardsOld'))];runJobs(cardJobs);
 setTimeout(()=>{ensureManifold().catch(e=>console.warn('manifold preload failed',e))},2500);
 </script>
