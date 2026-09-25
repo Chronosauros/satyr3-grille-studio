@@ -188,8 +188,9 @@ details.grp.inpanel .inner{padding:12px 0 0}
 
 footer{margin-top:clamp(48px,8vh,80px);padding-top:18px;font-size:13.5px;line-height:1.55;color:var(--ghost);max-width:78ch}
 footer p{margin:0 0 10px}
-footer a{color:var(--ink);text-decoration:underline;text-underline-offset:.15em;text-decoration-thickness:1px}
-footer a:hover{color:var(--acc)}
+footer a,.credit a{color:var(--ink);text-decoration:underline;text-underline-offset:.15em;text-decoration-thickness:1px}
+footer a:hover,.credit a:hover{color:var(--acc)}
+.credit{margin:calc(-1 * clamp(8px,1.4vh,18px)) 0 clamp(24px,3.6vh,40px);font-size:13.5px;line-height:1.55;color:var(--ghost);max-width:96ch;overflow-wrap:anywhere}
 
 @media (max-width:960px){.grid{grid-template-columns:1fr}}
 @media (max-width:600px){
@@ -248,6 +249,7 @@ footer a:hover{color:var(--acc)}
     <h1>Satyr 3 Grille Studio</h1>
     <p>Front grilles for the Satyr 3 body (Ø94, face Ø70.6), wall-checked and exported as STL or SVG.</p>
   </header>
+  <p class="credit">Adapted for Satyr 3 from <a href="https://www.printables.com/model/1188658-satyr3-alternate-fasciae">Satyr3 Alternate Fasciae</a> by <a href="https://www.printables.com/@Aplo_2167696">Aplo</a> - its files were the measured base and starting point for this generator. Original design: <a href="https://www.printables.com/model/1186855-satyr-3-diy-hifi-headphones">Satyr 3 DIY HiFi Headphones</a> by its original author. Both licensed <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Changes: new front patterns and a parametric generator. Generated grilles are for non-commercial use only - do not sell them or prints of them. Unofficial fan tool, not affiliated with or endorsed by Aplo or the Satyr 3 author; "Satyr 3" is used only to describe compatibility.</p>
 
   <div class="grid">
     <section class="stage slab">
@@ -329,8 +331,7 @@ footer a:hover{color:var(--acc)}
   </details>
 
   <footer>
-    <p>Body from the measured Interlocking_Slots_A.stl: base Ø94 with 45° chamfer to Ø80, ID 70.56, face plate 2 mm, pattern reach r 34.3, mount holes Ø4 at ±38.8. Min wall is measured on the actual outlines at 0.3 mm. Print face-down without supports. SVG export works with satyr_grille_generator.py.</p>
-    <p>Grille body adapted from <a href="https://www.printables.com/model/1186855-satyr-3-diy-hifi-headphones">Satyr 3 DIY HiFi Headphones</a> by its original author, licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Changes: new front patterns and a parametric generator. Generated grilles are for non-commercial use only - do not sell them or prints of them. Unofficial fan tool, not affiliated with or endorsed by the Satyr 3 author; "Satyr 3" is used only to describe compatibility.</p>
+    <p>Body from the measured Interlocking_Slots_A.stl (a file from the Satyr3 Alternate Fasciae model by Aplo): base Ø94 with 45° chamfer to Ø80, ID 70.56, face plate 2 mm, pattern reach r 34.3, mount holes Ø4 at ±38.8. Min wall is measured on the actual outlines at 0.3 mm. Print face-down without supports. SVG export works with satyr_grille_generator.py.</p>
   </footer>
 </div>
 
