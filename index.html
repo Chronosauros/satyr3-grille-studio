@@ -266,8 +266,8 @@ footer a:hover{color:var(--acc)}
           <g id="guides" style="display:none;color:var(--acc)" fill="none" stroke="currentColor">
             <circle r="34.3" stroke-width="0.25"/>
             <circle r="35.28" stroke-width="0.15" stroke-dasharray="0.8 0.6"/>
-            <circle cx="38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
-            <circle cx="-38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
+            <circle cy="38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
+            <circle cy="-38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
             <line x1="-47" x2="47" stroke-width="0.12" stroke-dasharray="1 1"/>
             <line y1="-47" y2="47" stroke-width="0.12" stroke-dasharray="1 1"/>
           </g>
@@ -911,7 +911,7 @@ async function exportStl(){
     const holes=new CrossSection(flipped,'NonZero');
     const facePlate=CrossSection.circle(FACE_R+0.02,256).subtract(holes).extrude(2).translate([0,0,6]);
     const ring=Manifold.revolve([[FACE_R,0],[47,0],[47,1],[40,8],[FACE_R,8]],256);
-    const cyl=x=>Manifold.cylinder(7,2,2,64).translate([x,0,-1]);
+    const cyl=y=>Manifold.cylinder(7,2,2,64).translate([0,y,-1]);
     const solid=ring.add(facePlate).subtract(cyl(38.8)).subtract(cyl(-38.8));
     const mesh=solid.getMesh(),name='satyr3_grille_'+exportName().replace(/-/g,'_')+'.stl';
     dl(name,stlBlob(mesh));
