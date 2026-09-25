@@ -5,6 +5,14 @@ One HTML file, runs in any browser: pick a pattern family, choose the air
 (keep the design's own open area or set a target), check the minimum wall
 and download a print-ready STL or an SVG.
 
+## Development
+
+The app remains a standalone `index.html`; no installation or build is required.
+With Node.js 18 or newer, run `npm test` for dependency-free regression tests.
+They use VM-based DOM stubs to cover geometry for all presets, state handling,
+solver behavior, caching, and the STL export resource lifecycle. They do not
+cover real browser rendering or integration with the CDN-hosted WASM library.
+
 ## Credit and license
 
 Adapted for Satyr 3 from

@@ -425,7 +425,7 @@ function loopSlots(loop,o){
 }
 // true minimum material width between neighbouring holes, sampled on the outlines
 function measureWall(polys){
-  const step=0.3,cell=2.6,grid=new Map(),P=[];
+  const step=0.3,cell=Math.max(2.6,MIN_WALL+step),grid=new Map(),P=[];
   polys.forEach((poly,pi)=>{for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],l=Math.hypot(b[0]-a[0],b[1]-a[1]),k=Math.max(1,Math.ceil(l/step));for(let t=0;t<k;t++)P.push([a[0]+(b[0]-a[0])*t/k,a[1]+(b[1]-a[1])*t/k,pi])}});
   P.forEach((p,i)=>{const key=Math.floor(p[0]/cell)+','+Math.floor(p[1]/cell);let c=grid.get(key);if(!c){c=[];grid.set(key,c)}c.push(i)});
   let min=Infinity;
@@ -939,8 +939,8 @@ function generate(type,par,skipWall){
 }
 function toD(polys){return polys.map(p=>'M'+p.map(pt=>pt[0].toFixed(2)+' '+pt[1].toFixed(2)).join('L')+'Z').join('')}
 function circleD(r){return 'M '+r+' 0 A '+r+' '+r+' 0 1 0 -'+r+' 0 A '+r+' '+r+' 0 1 0 '+r+' 0 Z'}
-function wallText(w){return isFinite(w)?(w>=2.6?'≥ 2.6':w.toFixed(2)):'≥ 2.6'}
-function wallOk(w){return !isFinite(w)||w>=MIN_WALL-0.03}
+function wallText(w){const limit=Math.max(2.6,MIN_WALL+0.3);return Number.isNaN(w)?'unknown':(w>=limit?'≥ '+limit.toFixed(1):w.toFixed(2))}
+function wallOk(w){return w===Infinity||(Number.isFinite(w)&&w>=MIN_WALL-0.03)}
 function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
 function dl(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
 function stlBlob(mesh){
@@ -964,18 +964,42 @@ function lsGet(k){try{return localStorage.getItem(LS+k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(LS+k,v)}catch(e){}}
 const S={type:'breeze',preset:'Breeze Block',mat:'beige',guides:false,air:{mode:'design',target:54,minWall:2},solved:null,params:Object.fromEntries(Object.entries(TYPES).map(([k,v])=>[k,{...v.def}]))};
 customHex=parseHex(lsGet('custom'))||customHex;
-try{const saved=JSON.parse(lsGet('state')||'null');if(saved&&TYPES[saved.type]){S.type=saved.type;S.preset=saved.preset||'';S.mat=(MATS[saved.mat]||saved.mat==='custom')?saved.mat:S.mat;if(saved.air&&(saved.air.mode==='design'||saved.air.mode==='target'))S.air={mode:saved.air.mode,target:Math.min(60,Math.max(25,Math.round(+saved.air.target)||54)),minWall:Math.min(3,Math.max(1.2,+saved.air.minWall||2))};for(const k in saved.params||{})if(S.params[k])Object.assign(S.params[k],saved.params[k])}}catch(e){}
+function boundedNumber(value,min,max,fallback){return typeof value==='number'&&Number.isFinite(value)?Math.min(max,Math.max(min,value)):fallback}
+function restoreState(saved){
+  if(!saved||!Object.hasOwn(TYPES,saved.type))return;
+  S.type=saved.type;
+  S.preset=typeof saved.preset==='string'?saved.preset.slice(0,100):'';
+  S.mat=Object.hasOwn(MATS,saved.mat)||saved.mat==='custom'?saved.mat:S.mat;
+  if(saved.air&&(saved.air.mode==='design'||saved.air.mode==='target')){
+    S.air={mode:saved.air.mode,target:Math.round(boundedNumber(saved.air.target,25,60,54)),minWall:boundedNumber(saved.air.minWall,1.2,3,2)};
+  }
+  // Only restore known finite parameters. Bad storage must never feed generator loops.
+  for(const [type,definition] of Object.entries(TYPES)){
+    const params=saved.params?.[type];if(!params||typeof params!=='object')continue;
+    for(const [key,,min,max,step] of definition.ctrl){
+      const value=boundedNumber(params[key],min,max,definition.def[key]);
+      S.params[type][key]=step>=1?min+Math.round((value-min)/step)*step:value;
+    }
+  }
+}
+try{restoreState(JSON.parse(lsGet('state')||'null'))}catch(e){}
 function save(){lsSet('state',JSON.stringify({type:S.type,preset:S.preset,mat:S.mat,air:S.air,params:S.params}))}
 
 const $=id=>document.getElementById(id);
 let cacheKey='',cacheVal=null;
 function airOn(){return S.air.mode==='target'&&!!S.solved&&S.solved.type===S.type}
 function effParams(){return airOn()?{...S.params[S.type],...S.solved.over}:S.params[S.type]}
-function current(){const par=effParams(),key=S.type+JSON.stringify(par);if(key!==cacheKey){cacheKey=key;cacheVal=generate(S.type,par)}return cacheVal}
+function current(){const par=effParams(),key=S.type+MIN_WALL+JSON.stringify(par);if(key!==cacheKey){const value=generate(S.type,par);cacheVal=value;cacheKey=key}return cacheVal}
 
 let solveTok=0,solveTimer=0;
-function requestSolve(delay){clearTimeout(solveTimer);if(S.air.mode!=='target'){S.solved=null;return}solveTimer=setTimeout(solveAir,delay||0)}
+function requestSolve(delay){
+  clearTimeout(solveTimer);solveTok++;S.solved=null;
+  if(S.air.mode!=='target')return;
+  $('airNote').textContent='solving…';syncControls();schedule();
+  solveTimer=setTimeout(solveAir,delay||0);
+}
 function solveAir(){
+  if(S.air.mode!=='target')return;
   const tok=++solveTok,type=S.type,base={...S.params[type]},A=AIR[type],tgt=S.air.target/100,N=33,res=[];let i=0;
   $('airNote').textContent='solving…';
   const sample=t=>{t=Math.min(1,Math.max(0,t));try{const g=generate(type,{...base,...A.f(t,base)},true);return {t,open:g.open}}catch(e){return null}};
@@ -988,10 +1012,10 @@ function solveAir(){
     let pick=pickFrom(res.slice());
     if(pick){const fine=[];for(let k=-4;k<=4;k++){const r=sample(pick.t+k/(8*(N-1)));if(r)fine.push(r)}const p2=pickFrom(fine);if(p2&&Math.abs(p2.open-tgt)<Math.abs(pick.open-tgt))pick=p2}
     if(tok!==solveTok)return;
-    if(!pick){S.solved=null;$('airNote').textContent='no setting keeps 2 mm walls here - showing the design default';renderMain();syncControls();return}
+    if(!pick){S.solved=null;$('airNote').textContent='no setting keeps '+MIN_WALL.toFixed(1)+' mm walls here - showing the current design';renderMain();syncControls();return}
     S.solved={type,over:A.f(pick.t,base)};
     const off=Math.abs(pick.open-tgt)*100;
-    $('airNote').textContent=off<1.5?('solved: '+(pick.open*100).toFixed(1)+' % open, walls '+wallText(pick.wall)+' mm'):('closest this family reaches with 2 mm walls: '+(pick.open*100).toFixed(1)+' %');
+    $('airNote').textContent=off<1.5?('solved: '+(pick.open*100).toFixed(1)+' % open, walls '+wallText(pick.wall)+' mm'):('closest this family reaches with '+MIN_WALL.toFixed(1)+' mm walls: '+(pick.open*100).toFixed(1)+' %');
     renderMain();syncControls();
   };
   setTimeout(step,0);
@@ -1116,8 +1140,8 @@ function buildCards(list,host){
   });
   return jobs;
 }
-let cardJobs=[];function refreshCards(){clearTimeout(refreshCards.t);refreshCards.t=setTimeout(()=>runJobs(cardJobs),300)}
-function runJobs(jobs){let i=0;const tick=()=>{const t0=performance.now();while(i<jobs.length&&performance.now()-t0<30)jobs[i++]();if(i<jobs.length)setTimeout(tick,0)};setTimeout(tick,0)}
+let cardJobs=[],cardRun=0;function refreshCards(){cardRun++;clearTimeout(refreshCards.t);refreshCards.t=setTimeout(()=>runJobs(cardJobs),300)}
+function runJobs(jobs){let i=0;const token=++cardRun;const tick=()=>{if(token!==cardRun)return;const t0=performance.now();while(i<jobs.length&&performance.now()-t0<30)jobs[i++]();if(i<jobs.length)setTimeout(tick,0)};setTimeout(tick,0)}
 
 function initGroups(){
   document.querySelectorAll('details.grp').forEach(d=>{
@@ -1129,37 +1153,52 @@ function initGroups(){
 
 /* ---------- export ---------- */
 function exportName(){return slug(S.preset||S.type+'-custom')+(airOn()?'-air'+S.air.target:'')}
+function escapeXml(value){return value.replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]))}
 function exportSvg(){
   const g=current(),sc=46/REACH;
   let d='M 100.000 50.000 A 50.000 50.000 0 1 0 0.000 50.000 A 50.000 50.000 0 1 0 100.000 50.000 Z ';
   d+=g.polys.map(p=>'M '+p.map(pt=>(50+pt[0]*sc).toFixed(3)+' '+(50+pt[1]*sc).toFixed(3)).join(' L ')+' Z').join(' ');
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">\n<title>'+(S.preset||TYPES[S.type].label)+' grille - Ø100 mm, 4 mm rim</title>\n<path fill="#1c1714" fill-rule="evenodd" d="'+d+'"/>\n</svg>';
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">\n<title>'+escapeXml(S.preset||TYPES[S.type].label)+' grille - Ø100 mm, 4 mm rim</title>\n<path fill="#1c1714" fill-rule="evenodd" d="'+d+'"/>\n</svg>';
   dl('satyr3-'+exportName()+'-100mm.svg',new Blob([svg],{type:'image/svg+xml'}));
   $('status').textContent='SVG saved - loader-compatible (evenodd, outer circle first)';
 }
 function ensureManifold(){
-  if(!window.__manifoldP)window.__manifoldP=import('https://cdn.jsdelivr.net/npm/manifold-3d@3.1.1/+esm').then(m=>m.default()).then(w=>{w.setup();return w});
+  if(!window.__manifoldP)window.__manifoldP=import('https://cdn.jsdelivr.net/npm/manifold-3d@3.1.1/+esm').then(m=>m.default()).then(w=>{w.setup();return w}).catch(e=>{window.__manifoldP=null;throw e});
   return window.__manifoldP;
 }
 async function exportStl(){
+  if($('bStl').disabled)return;
+  $('bStl').disabled=true;
+  const owned=[],keep=value=>{owned.push(value);return value};
   try{
+    const g=current(),name='satyr3_grille_'+exportName().replace(/-/g,'_')+'.stl';
     $('status').textContent='Loading geometry engine…';
     const w=await ensureManifold();
     $('status').textContent='Building mesh…';
     await new Promise(r=>setTimeout(r,30));
-    const {Manifold,CrossSection}=w,g=current();
+    const {Manifold,CrossSection}=w;
     const flipped=g.polys.map(p=>{const q=p.map(([x,y])=>[x,-y]);return area(q)>0?q:q.slice().reverse()});
-    const holes=new CrossSection(flipped,'NonZero');
-    const facePlate=CrossSection.circle(FACE_R+0.02,256).subtract(holes).extrude(2).translate([0,0,6]);
-    const ring=Manifold.revolve([[FACE_R,0],[47,0],[47,1],[40,8],[FACE_R,8]],256);
-    const cyl=y=>Manifold.cylinder(7,2,2,64).translate([0,y,-1]);
-    const solid=ring.add(facePlate).subtract(cyl(38.8)).subtract(cyl(-38.8));
-    const mesh=solid.getMesh(),name='satyr3_grille_'+exportName().replace(/-/g,'_')+'.stl';
+    const holes=keep(new CrossSection(flipped,'NonZero'));
+    const face=keep(CrossSection.circle(FACE_R+0.02,256));
+    const perforated=keep(face.subtract(holes));
+    const extrusion=keep(perforated.extrude(2));
+    const facePlate=keep(extrusion.translate([0,0,6]));
+    const ring=keep(Manifold.revolve([[FACE_R,0],[47,0],[47,1],[40,8],[FACE_R,8]],256));
+    const cylinder=keep(Manifold.cylinder(7,2,2,64));
+    const topHole=keep(cylinder.translate([0,38.8,-1]));
+    const bottomHole=keep(cylinder.translate([0,-38.8,-1]));
+    const body=keep(ring.add(facePlate));
+    const drilled=keep(body.subtract(topHole));
+    const solid=keep(drilled.subtract(bottomHole));
+    const mesh=solid.getMesh();
     dl(name,stlBlob(mesh));
     $('status').textContent='Saved '+name+' · '+(mesh.triVerts.length/3)+' triangles · Ø94 body, mount holes included';
   }catch(e){
     console.warn(e);
-    $('status').textContent='STL engine failed ('+(e.message||e)+') - download the SVG and run satyr_grille_generator.py instead.';
+    $('status').textContent='STL export failed ('+(e.message||e)+'). Check your connection and try again, or download the SVG.';
+  }finally{
+    for(const value of owned.reverse())value.delete();
+    $('bStl').disabled=false;
   }
 }
 
@@ -1173,7 +1212,7 @@ $('chamfer').setAttribute('d',circleD(47)+' '+circleD(TOP_R));
 buildRelief();setTimeout(bakeBed,0);
 MIN_WALL=S.air.minWall;
 buildKeys();buildControls();applyMat();initGroups();renderAir();renderMain();requestSolve();
-$('airDesign').addEventListener('click',()=>{S.air.mode='design';S.solved=null;solveTok++;$('airNote').textContent='';renderAir();syncControls();renderMain();save()});
+$('airDesign').addEventListener('click',()=>{S.air.mode='design';requestSolve();$('airNote').textContent='';renderAir();syncControls();renderMain();save()});
 $('airTarget').addEventListener('click',()=>{S.air.mode='target';renderAir();save();requestSolve()});
 $('wallRange').addEventListener('input',()=>{S.air.minWall=+$('wallRange').value;MIN_WALL=S.air.minWall;cacheKey='';renderAir();renderMain();save();requestSolve(200);refreshCards()});
 $('airRange').addEventListener('input',()=>{S.air.target=+$('airRange').value;renderAir();save();requestSolve(200)});
