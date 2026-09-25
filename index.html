@@ -5,131 +5,205 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Satyr 3 Grille Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* Paper & Ink: warm paper at rest, one blue for interaction. Controls are pressed into
+   the sheet, never lifted on hard offset shadows. Every divider is a pressed rule. */
 :root{
-  --bg:#b8b3a9;--slab:#d7d3ca;--slab2:#c6c1b7;--ink:#161513;--muted:#57534c;
-  --acc:#e2531d;--acc2:#f0784a;--ok:#2f7d3a;--bad:#c42b1c;
+  --paper:#F4EEE2;--paper-hi:#FBF8F1;--paper-lo:#E7E0CD;
+  --ink:#1E3442;--kicker:#2E4756;--ghost:#44585F;--deep:#14232E;
+  --acc:#33718F;--acc-deep:#235268;
+  --ok:#235268;--bad:#8E3B2B;
   --mat:#ddd0b6;--mat-hi:#f3ead9;--mat-lo:#7a705f;--cavity:#1a1816;
-  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:"Outfit",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --well:inset 0 2px 3px -1px rgba(30,52,66,.17),inset 0 1px 0 rgba(255,252,244,.28),
+    inset 0 -2px 0 -1px rgba(255,252,244,.80),0 1px 0 rgba(255,252,244,.55);
+  --well-bg:rgba(30,52,66,.035);
+  --slug:inset 0 1px 0 rgba(255,252,244,.9),0 1px 0 rgba(30,52,66,.16),0 2px 3px -1px rgba(30,52,66,.16);
+  --slug-bg:rgba(255,252,244,.46);
+  --press:inset 0 2px 4px rgba(30,52,66,.26),inset 0 1px 1px rgba(30,52,66,.16),
+    inset 0 -1px 0 rgba(255,252,244,.75),0 1px 0 rgba(255,252,244,.65);
+  --press-bg:rgba(30,52,66,.075);
+  --rule:rgba(30,52,66,.16);
+  --rule-lit:0 1px 0 rgba(255,252,244,.70),0 2px 2px -1px rgba(30,52,66,.09);
+  --head:0 -1px 0 rgba(255,252,244,.63),0 1px 1px rgba(30,52,66,.13),0 3px 9px rgba(30,52,66,.08);
+  --ease:cubic-bezier(.16,.84,.3,1);
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
-  background-color:var(--bg);
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .32 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  color:var(--ink);font-family:'Archivo',system-ui,sans-serif;font-size:15px;line-height:1.4;
+  background:var(--paper);
+  background-image:repeating-linear-gradient(0deg,rgba(30,52,66,.018) 0 1px,transparent 1px 3px);
+  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
-.wrap{max-width:1240px;margin:0 auto;padding:28px 24px 72px}
-.slab{background:var(--slab);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
-.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:26px;border-bottom:6px solid var(--ink);padding-bottom:16px}
-.mast .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-.mast h1{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:clamp(34px,6vw,64px);line-height:.92;margin:6px 0 0;letter-spacing:-.02em;text-transform:uppercase}
-.mast h1 span{display:inline-block;background:var(--acc);padding:0 .12em;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);margin-left:.08em}
-.mast p{margin:0;max-width:420px;color:var(--muted);font-size:14px}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start}
-.stage{padding:18px}
-.stage-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.nameplate{font-family:'Archivo Black',sans-serif;font-size:22px;text-transform:uppercase;letter-spacing:.01em}
-.nameplate small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-weight:500}
-.mats{display:flex;gap:8px;flex-wrap:wrap}
-.chip{width:34px;height:34px;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;padding:0;position:relative}
-.chip:active,.chip:hover:active,.chip.on{transform:translate(3px,3px);box-shadow:inset 2px 2px 0 rgba(0,0,0,.35)}
-.chip span{position:absolute;left:0;right:0;top:100%;margin-top:6px;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;text-align:center;opacity:0}
+::selection{background:var(--acc);color:var(--paper)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px,3.4vw,44px) 72px}
+
+/* pressed rule: a hairline cut into the paper with light caught on its lower lip */
+.mast,.ctrls,section.gal .gal-head,footer,.psec{position:relative}
+.mast::after,.gal-head::after,.ctrls::before,footer::before,.psec::before{
+  content:"";position:absolute;left:0;right:0;height:1px;background:var(--rule);box-shadow:var(--rule-lit)}
+.mast::after,.gal-head::after{bottom:0}
+.ctrls::before,footer::before,.psec::before{top:0}
+
+.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 32px;flex-wrap:wrap;
+  padding:clamp(32px,6vh,64px) 0 clamp(18px,2.6vh,26px);margin-bottom:clamp(24px,3.6vh,40px)}
+.mast h1{font-weight:700;font-size:clamp(36px,5vw,64px);line-height:1;letter-spacing:-.035em;margin:0;text-shadow:var(--head)}
+.mast p{margin:0 0 .35em;max-width:34em;color:var(--ghost);font-size:16px;line-height:1.45}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:clamp(28px,3.4vw,48px);align-items:start}
+.slab{background:none}
+
+/* stage */
+.stage-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px 20px;flex-wrap:wrap}
+.nameplate{font-weight:700;font-size:clamp(26px,2.4vw,34px);letter-spacing:-.025em;line-height:1.05;text-shadow:var(--head)}
+.nameplate small{display:block;font-weight:400;font-size:15px;letter-spacing:0;color:var(--ghost);margin-top:6px;text-shadow:none}
+.mats{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:22px}
+.chip{width:48px;height:48px;border:0;border-radius:0;cursor:pointer;padding:0;position:relative;
+  box-shadow:inset 0 1px 0 rgba(255,252,244,.35),inset 0 0 0 1px rgba(30,52,66,.18),0 1px 0 rgba(30,52,66,.16),0 2px 3px -1px rgba(30,52,66,.2);
+  transition:box-shadow .25s,transform .12s}
+.chip:hover{box-shadow:inset 0 0 0 1px rgba(30,52,66,.22)}
+.chip:hover:active,.chip:active,.chip.on{transform:translateY(1px);
+  box-shadow:inset 0 3px 5px rgba(20,35,46,.42),inset 0 1px 1px rgba(20,35,46,.3),inset 0 0 0 1px rgba(30,52,66,.25),0 1px 0 rgba(255,252,244,.8)}
+.chip:active{transition-duration:.05s}
+.chip:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.chip span{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;font-size:12px;font-weight:500;
+  color:var(--kicker);white-space:nowrap;opacity:0;pointer-events:none}
 .chip.on span{opacity:1}
-.viewport{background:var(--slab2);border:3px solid var(--ink);box-shadow:inset 4px 4px 0 rgba(0,0,0,.14);display:flex;justify-content:center;padding:14px;margin-top:22px}
-.viewport svg{width:100%;max-width:620px;display:block;aspect-ratio:1}
+.mats .chip:first-child span{left:0;transform:none}
+.mats .chip:last-child span{left:auto;right:0;transform:none}
+
+.viewport{background:var(--paper-lo);box-shadow:var(--well),inset 0 0 0 100vmax rgba(30,52,66,.02);
+  display:flex;justify-content:center;padding:clamp(14px,3vw,36px);margin-top:14px}
+.viewport svg{width:100%;max-width:600px;display:block;aspect-ratio:1}
 .mat{fill:var(--mat)}
 .cav0{stop-color:#3a3632}.cav1{stop-color:var(--cavity)}
 .chi{stop-color:var(--mat-hi)}.clo{stop-color:var(--mat-lo)}
-.stats{display:grid;grid-template-columns:1.6fr 1fr 1.2fr;gap:0;margin-top:18px;border:3px solid var(--ink)}
-.stat{padding:12px 14px;border-right:3px solid var(--ink);background:var(--slab)}
-.stat:last-child{border-right:0}
-.lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.val{font-family:'Archivo Black',sans-serif;font-size:28px;line-height:1.05;margin-top:4px}
-.bar{position:relative;height:14px;border:2px solid var(--ink);background:var(--slab2);margin-top:8px}
-.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--acc)}
-.bar b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink)}
-.bar b::after{content:attr(data-l);position:absolute;top:100%;left:50%;transform:translateX(-50%);font:500 9px var(--mono);margin-top:3px;white-space:nowrap}
-.barlegend{font:500 9px var(--mono);color:var(--muted);margin-top:16px;letter-spacing:.04em}
-.badge{display:inline-block;font:600 11px var(--mono);letter-spacing:.08em;padding:2px 6px;border:2px solid var(--ink);margin-left:6px;vertical-align:middle;text-transform:uppercase}
-.badge.ok{background:#bfe0b9}.badge.bad{background:#f3b1a6}
-.note{font-family:var(--mono);font-size:12px;color:var(--muted);min-height:16px;margin-top:10px}
-.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
-.btn{font:700 14px 'Archivo',sans-serif;text-transform:uppercase;letter-spacing:.06em;background:var(--acc);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px 16px;cursor:pointer;transition:transform .05s,box-shadow .05s;min-height:48px}
-.btn.big{flex:1 1 260px}
-.btn.ghost{background:var(--slab)}
-.btn:hover{background:var(--acc2)}
-.btn.ghost:hover{background:#e6e2da}
-.btn:active,.btn:hover:active{transform:translate(4px,4px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.35)}
-.btn.on{transform:translate(4px,4px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.35);background:var(--slab2)}
-.status{font-family:var(--mono);font-size:12px;color:var(--muted);min-height:16px;margin-top:10px}
-.panel{padding:18px}
-.panel h3{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:14px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+
+.stats{display:grid;grid-template-columns:1.6fr 1fr 1.2fr;margin-top:18px;background:var(--well-bg);box-shadow:var(--well)}
+.stat{padding:16px 18px 18px;position:relative}
+.stat+.stat::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:1px;background:var(--rule);box-shadow:1px 0 0 rgba(255,252,244,.7)}
+.lab{font-size:14px;font-weight:500;color:var(--ghost)}
+.val{font-weight:700;font-size:30px;line-height:1.05;letter-spacing:-.025em;margin-top:4px;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:10px;background:var(--paper-lo);margin-top:12px;
+  box-shadow:inset 0 2px 3px -1px rgba(30,52,66,.25),inset 0 -1px 0 rgba(255,252,244,.8)}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--acc);box-shadow:inset 0 1px 0 rgba(255,252,244,.25)}
+.bar b{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--ink)}
+.bar b::after{content:attr(data-l);position:absolute;top:100%;left:50%;transform:translateX(-50%);font:500 11px var(--mono);margin-top:3px;white-space:nowrap;color:var(--kicker)}
+.bar u{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2px dashed var(--acc-deep);margin-left:-1px}
+.barlegend{font-size:13px;color:var(--ghost);margin-top:22px}
+.badge{display:inline-block;font:500 12px var(--mono);padding:2px 7px;margin-left:8px;vertical-align:middle;letter-spacing:0;
+  background:var(--press-bg);box-shadow:var(--press)}
+.badge.ok{color:var(--ok)}.badge.bad{color:var(--bad)}
+.note,.status{font-size:14px;color:var(--ghost);min-height:20px;margin-top:10px}
+
+/* buttons: raised slug at rest, flat under the hand, pressed into the paper on click and while on */
+.btn,.key,.card,details.grp>summary{border:0;border-radius:0;cursor:pointer;color:var(--ink);
+  background:var(--slug-bg);box-shadow:var(--slug);transition:color .25s,background .25s,box-shadow .25s,transform .12s}
+.btn{font:600 15px var(--sans);letter-spacing:-.01em;padding:12px 20px;min-height:48px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.btn.big{flex:1 1 260px;font-size:16px;background:var(--ink);color:var(--paper);
+  box-shadow:inset 0 1px 0 rgba(255,252,244,.18),0 1px 0 rgba(30,52,66,.2),0 2px 3px -1px rgba(30,52,66,.3)}
+.btn:hover,.key:hover,.card:hover{background:transparent;box-shadow:none}
+.btn.big:hover{background:var(--acc-deep);box-shadow:0 1px 0 rgba(30,52,66,.2)}
+.btn:focus-visible,.key:focus-visible,.card:focus-visible,details.grp>summary:focus-visible{outline:2px solid var(--ink);outline-offset:-6px}
+.btn.big:focus-visible{outline-color:var(--paper)}
+/* pressed stands after hover with at least hover's specificity, so a held click always shows the bite */
+.btn:hover:active,.btn:active,.btn.on,
+.key:hover:active,.key:active,.key.on,
+.card:hover:active,.card:active,.card.on{transform:translateY(1px);background:var(--press-bg);box-shadow:var(--press)}
+.btn.big:hover:active,.btn.big:active{background:var(--deep);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.45),inset 0 1px 1px rgba(0,0,0,.3),0 1px 0 rgba(255,252,244,.65)}
+.btn:active,.key:active,.card:active{transition-duration:.05s}
+.btn.on,.key.on{color:var(--acc-deep)}
+
+/* panel */
+.panel h3{font-weight:600;font-size:19px;letter-spacing:-.012em;margin:0 0 12px}
+.psec{padding-top:22px;margin-top:24px}
 .keys{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.key{font:700 13px 'Archivo',sans-serif;text-align:left;background:var(--slab);color:var(--ink);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:9px 10px;cursor:pointer;min-height:48px;line-height:1.15}
-.key small{display:block;font:400 10px var(--mono);color:var(--muted);margin-top:2px;letter-spacing:.02em}
-.key:hover{background:#e6e2da}
-.key:active,.key:hover:active,.key.on{transform:translate(3px,3px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.3);background:var(--acc)}
-.key.on small{color:var(--ink)}
-.ctrls{display:flex;flex-direction:column;gap:14px;margin-top:20px;padding-top:18px;border-top:3px solid var(--ink)}
-.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
-.ctrl label{font-weight:600;font-size:13px}
-.ctrl output{font:600 12px var(--mono);background:var(--ink);color:var(--slab);padding:1px 6px}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;margin:0;cursor:pointer}
-input[type=range]::-webkit-slider-runnable-track{height:12px;background:var(--slab2);border:3px solid var(--ink);box-shadow:inset 2px 2px 0 rgba(0,0,0,.2)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:26px;background:var(--acc);border:3px solid var(--ink);margin-top:-10px;box-shadow:2px 2px 0 var(--ink)}
-input[type=range]:active::-webkit-slider-thumb{box-shadow:none;transform:translate(1px,1px)}
-input[type=range]::-moz-range-track{height:12px;background:var(--slab2);border:3px solid var(--ink)}
-input[type=range]::-moz-range-thumb{width:16px;height:22px;background:var(--acc);border:3px solid var(--ink);border-radius:0;box-shadow:2px 2px 0 var(--ink)}
-.about{font-family:var(--mono);font-size:12px;color:var(--muted);margin:14px 0 0}
-section.gal{margin-top:48px}
-.gal-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;border-bottom:6px solid var(--ink);padding-bottom:10px;margin-bottom:20px}
-.gal-head h2{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:30px;text-transform:uppercase;margin:0;letter-spacing:-.01em}
-.gal-head p{margin:0;font-family:var(--mono);font-size:12px;color:var(--muted)}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
-.card{background:var(--slab);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;display:block;width:100%}
-.card:hover{background:#e6e2da}
-.card:active,.card:hover:active,.card.on{transform:translate(5px,5px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.25)}
-.card.on{background:var(--acc)}
-.card svg{width:100%;display:block;aspect-ratio:1;background:var(--slab2);border:2px solid var(--ink)}
-.card .nm{font-family:'Archivo Black',sans-serif;font-size:16px;text-transform:uppercase;margin-top:10px}
-.card .ab{font-size:12px;color:var(--muted);margin-top:2px;min-height:32px}
-.card.on .ab{color:var(--ink)}
-.card .st{font:500 11px var(--mono);margin-top:6px;display:flex;flex-wrap:wrap;gap:2px 10px}
+.key{font:500 15px var(--sans);letter-spacing:-.005em;text-align:left;padding:12px 14px;min-height:48px;line-height:1.2}
+.key small{display:none}
+.ctrls{display:flex;flex-direction:column;gap:4px;margin-top:24px;padding-top:22px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:-4px}
+.ctrl label{font-weight:500;font-size:15px}
+.ctrl output{font:500 13px var(--mono);color:var(--ink);background:var(--well-bg);box-shadow:var(--well);padding:2px 8px;white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:48px;background:transparent;margin:0;cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+input[type=range]::-webkit-slider-runnable-track{height:8px;background:var(--paper-lo);
+  box-shadow:inset 0 2px 3px -1px rgba(30,52,66,.28),inset 0 -1px 0 rgba(255,252,244,.85)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:28px;margin-top:-10px;border:0;border-radius:0;
+  background:var(--paper-hi);box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(30,52,66,.28),0 1px 0 rgba(30,52,66,.2),0 2px 4px -1px rgba(30,52,66,.3)}
+input[type=range]:active::-webkit-slider-thumb{background:var(--paper-lo);box-shadow:inset 0 2px 3px rgba(30,52,66,.3),inset 0 0 0 1px rgba(30,52,66,.3)}
+input[type=range]::-moz-range-track{height:8px;background:var(--paper-lo);box-shadow:inset 0 2px 3px -1px rgba(30,52,66,.28)}
+input[type=range]::-moz-range-thumb{width:18px;height:28px;border:0;border-radius:0;background:var(--paper-hi);
+  box-shadow:inset 0 0 0 1px rgba(30,52,66,.28),0 2px 4px -1px rgba(30,52,66,.3)}
+.ctrl.locked label{color:var(--ghost)}
+.ctrl.locked input{opacity:.4;cursor:not-allowed}
+.ctrl.locked output{color:var(--acc-deep);background:var(--press-bg);box-shadow:var(--press)}
+.airbox{margin-top:16px}
+.airqs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.airqs .key{text-align:center;font-variant-numeric:tabular-nums}
+.about{font-size:14px;line-height:1.5;color:var(--ghost);margin:16px 0 0}
+
+/* gallery */
+section.gal{margin-top:clamp(48px,8vh,88px)}
+.gal-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px 20px;padding-bottom:14px;margin-bottom:24px}
+.gal-head h2{font-weight:700;font-size:clamp(26px,2.8vw,36px);letter-spacing:-.03em;margin:0;text-shadow:var(--head)}
+.gal-head p{margin:0;font-size:15px;color:var(--ghost)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+.card{padding:12px 12px 14px;text-align:left;font:inherit;display:block;width:100%}
+.card svg{width:100%;display:block;aspect-ratio:1;background:var(--paper-lo);box-shadow:var(--well)}
+.card .nm{font-weight:600;font-size:17px;letter-spacing:-.012em;margin-top:12px}
+.card.on .nm{color:var(--acc-deep)}
+.card .ab{font-size:13.5px;line-height:1.35;color:var(--ghost);margin-top:3px;min-height:36px}
+.card .st{font:400 12px var(--mono);color:var(--kicker);margin-top:8px;display:flex;flex-wrap:wrap;gap:2px 12px}
 .card .st span{white-space:nowrap}
-details.grp{margin-top:40px;background:var(--slab);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
-details.grp>summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+
+/* collapsible groups: bar raised at rest, flat under the hand, pressed while open */
+details.grp{margin-top:clamp(28px,4vh,44px)}
+details.grp>summary{list-style:none;user-select:none;display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding:clamp(13px,1.6vh,17px) clamp(14px,1.7vw,20px);min-height:48px}
 details.grp>summary::-webkit-details-marker{display:none}
-details.grp>summary h2{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:18px;text-transform:uppercase;margin:0}
-details.grp>summary p{margin:2px 0 0;font-family:var(--mono);font-size:12px;color:var(--muted)}
-details.grp>summary .arr{flex:0 0 auto;width:36px;height:36px;border:3px solid var(--ink);display:grid;place-items:center;font-weight:700;background:var(--acc);transition:transform .15s}
-details.grp[open]>summary .arr{transform:rotate(180deg)}
-details.grp .inner{padding:4px 18px 20px;border-top:3px solid var(--ink)}
-details.grp.inpanel{margin-top:14px;box-shadow:3px 3px 0 var(--ink)}
-details.grp.inpanel>summary{padding:10px 12px}
-details.grp.inpanel>summary h2{font-size:13px}
-details.grp.inpanel>summary .arr{width:30px;height:30px}
-details.grp.inpanel .inner{padding:12px}
-.airbox{margin-top:14px}
-.airqs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.airqs .key{min-height:44px;text-align:center}
-.ctrl.locked label{color:var(--muted)}
-.ctrl.locked input{opacity:.45;cursor:not-allowed}
-.ctrl.locked output{background:var(--acc);color:var(--ink)}
-.bar u{position:absolute;top:-7px;bottom:-7px;width:0;border-left:3px dashed var(--acc);margin-left:-1px}
-footer{margin-top:44px;font-family:var(--mono);font-size:11px;color:var(--muted);border-top:3px solid var(--ink);padding-top:12px}
+details.grp>summary:hover{background:transparent;box-shadow:none}
+details.grp[open]>summary,details.grp>summary:hover:active,details.grp>summary:active{background:var(--press-bg);box-shadow:var(--press)}
+details.grp>summary:active{transition-duration:.05s}
+details.grp>summary h2{font-weight:600;font-size:clamp(17px,.8vw + 12px,21px);letter-spacing:-.012em;line-height:1.15;margin:0}
+details.grp>summary p{margin:3px 0 0;font-size:14.5px;line-height:1.35;color:var(--ghost)}
+details.grp>summary .chev{flex:0 0 auto;width:18px;height:18px;color:var(--acc);transition:transform .25s var(--ease)}
+details.grp[open]>summary .chev{transform:rotate(180deg)}
+details.grp .inner{padding:20px 0 4px}
+details.grp.inpanel{margin-top:14px}
+details.grp.inpanel>summary{padding:12px 14px}
+details.grp.inpanel>summary h2{font-size:16px}
+details.grp.inpanel>summary p{font-size:13.5px}
+details.grp.inpanel .inner{padding:12px 0 0}
+
+footer{margin-top:clamp(48px,8vh,80px);padding-top:18px;font-size:13.5px;line-height:1.55;color:var(--ghost);max-width:78ch}
 footer p{margin:0 0 10px}
-footer a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+footer a{color:var(--acc-deep);text-decoration:underline;text-underline-offset:.15em;text-decoration-thickness:1px}
+footer a:hover{color:var(--ink)}
+
 @media (max-width:960px){.grid{grid-template-columns:1fr}}
 @media (max-width:600px){
-  .wrap{padding:18px 16px 60px}
+  .mast{padding-top:28px}
   .stats{grid-template-columns:1fr 1fr}
-  .stat:first-child{grid-column:1/-1;border-right:0;border-bottom:3px solid var(--ink)}
-  .cards{grid-template-columns:1fr 1fr;gap:14px}
+  .stat:first-child{grid-column:1/-1}
+  .stat:nth-child(2)::before{left:14px;right:0;top:0;bottom:auto;width:auto;height:1px;box-shadow:0 1px 0 rgba(255,252,244,.7)}
+  .stat:nth-child(3)::after{content:"";position:absolute;left:0;right:14px;top:0;height:1px;background:var(--rule);box-shadow:0 1px 0 rgba(255,252,244,.7)}
+  .btn.big{flex-basis:100%}
+  .btn.ghost{flex:1 1 0}
+  .cards{grid-template-columns:1fr 1fr;gap:12px}
   .card .ab{display:none}
+  .val{font-size:26px}
 }
-@media print{details.grp .inner{display:block}}
+@media print{
+  details.grp .inner{display:block}
+  .mast::after,.gal-head::after,.ctrls::before,footer::before,.psec::before{background:rgba(30,52,66,.28);box-shadow:none}
+}
 </style>
 </head>
 <body>
@@ -167,11 +241,8 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 
 <div class="wrap">
   <header class="mast">
-    <div>
-      <div class="kicker">Satyr 3 · Ø94 body · Ø70.6 face</div>
-      <h1>Grille<span>Studio</span></h1>
-    </div>
-    <p>Retro brutalist series: eight new families built from concrete screen blocks, ribbed facades, coffered ceilings and radio hardware. Every pattern prints face-down on the measured body with the minimum wall measured live.</p>
+    <h1>Satyr 3 Grille Studio</h1>
+    <p>Front grilles for the Satyr 3 body (Ø94, face Ø70.6), wall-checked and exported as STL or SVG.</p>
   </header>
 
   <div class="grid">
@@ -188,7 +259,7 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
           <circle r="47" fill="none" stroke="#161513" stroke-width="0.35"/>
           <path id="plate" class="mat" fill-rule="evenodd" filter="url(#tactile)"/>
           <circle r="40" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="0.25"/>
-          <g id="guides" style="display:none" fill="none" stroke="#e2531d">
+          <g id="guides" style="display:none" fill="none" stroke="#33718F">
             <circle r="34.3" stroke-width="0.25"/>
             <circle r="35.28" stroke-width="0.15" stroke-dasharray="0.8 0.6"/>
             <circle cx="38.8" r="2" stroke-width="0.25" stroke-dasharray="0.8 0.6"/>
@@ -203,14 +274,14 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
           <div class="lab">Open area</div>
           <div class="val" id="sOpen">-</div>
           <div class="bar"><i id="sBar"></i><b style="left:30%" data-l="30"></b><b style="left:45%" data-l="45"></b><b style="left:54%" data-l="54"></b><u id="sTarget"></u></div>
-          <div class="barlegend">phyllotaxis 30 · raindrop 45 · stock 54</div>
+          <div class="barlegend">Reference: phyllotaxis 30, raindrop 45, stock 54</div>
         </div>
         <div class="stat"><div class="lab">Holes</div><div class="val" id="sHoles">-</div></div>
         <div class="stat"><div class="lab">Min wall</div><div class="val" id="sWall">-</div></div>
       </div>
       <div class="note" id="note"></div>
       <div class="actions">
-        <button class="btn big" id="bStl">Download STL - ready to print</button>
+        <button class="btn big" id="bStl">Download STL</button>
         <button class="btn ghost" id="bSvg">SVG</button>
         <button class="btn ghost" id="bGuide">Guides</button>
       </div>
@@ -220,19 +291,19 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
     <aside class="panel slab">
       <h3>Air</h3>
       <div class="keys">
-        <button class="key" id="airDesign">Design default<small>each design as drawn</small></button>
-        <button class="key" id="airTarget">Target open area<small>hole size solved for air</small></button>
+        <button class="key" id="airDesign">Design default</button>
+        <button class="key" id="airTarget">Target open area</button>
       </div>
       <div class="ctrl airbox"><div class="row"><label for="wallRange">Min wall (print limit)</label><output id="wallVal"></output></div><input type="range" id="wallRange" min="1.2" max="3" step="0.1"></div>
       <div id="airBox" class="airbox" hidden>
         <div class="ctrl"><div class="row"><label for="airRange">Target open area</label><output id="airVal"></output></div><input type="range" id="airRange" min="25" max="60" step="1"></div>
-        <div class="airqs"><button class="key airq" data-v="30">30 %<small>phyllotaxis</small></button><button class="key airq" data-v="45">45 %<small>raindrop</small></button><button class="key airq" data-v="54">54 %<small>stock</small></button></div>
+        <div class="airqs"><button class="key airq" data-v="30" title="phyllotaxis">30 %</button><button class="key airq" data-v="45" title="raindrop">45 %</button><button class="key airq" data-v="54" title="stock">54 %</button></div>
         <div class="note" id="airNote"></div>
       </div>
-      <h3 style="margin-top:22px">Family</h3>
+      <h3 class="psec">Family</h3>
       <div class="keys" id="keysNew"></div>
       <details class="grp inpanel" data-grp="oldfam">
-        <summary><div><h2>Earlier families</h2><p>6 families from 18.07 - waves, vortex, hex, sunburst, topo, pebbles</p></div><span class="arr">▾</span></summary>
+        <summary><div><h2>Earlier families</h2><p>Waves, vortex, hex, sunburst, topo, pebbles</p></div><svg class="chev" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1.5 L9 8.5 L17 1.5"/></svg></summary>
         <div class="inner"><div class="keys" id="keysOld"></div></div>
       </details>
       <p class="about" id="about"></p>
@@ -242,19 +313,19 @@ footer a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
 
   <section class="gal">
     <div class="gal-head">
-      <h2>Retro brutalist presets</h2>
-      <p id="galInfo">17 designs · tap to load and tweak</p>
+      <h2>Presets</h2>
+      <p id="galInfo">17 designs</p>
     </div>
     <div class="cards" id="cardsNew"></div>
   </section>
 
   <details class="grp" data-grp="oldpre">
-    <summary><div><h2>Earlier presets</h2><p>12 designs from the first studio (18.07), same body and export</p></div><span class="arr">▾</span></summary>
+    <summary><div><h2>Earlier presets</h2><p>12 designs from the first version, same body and export</p></div><svg class="chev" viewBox="0 0 18 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1.5 L9 8.5 L17 1.5"/></svg></summary>
     <div class="inner"><div class="cards" id="cardsOld" style="margin-top:16px"></div></div>
   </details>
 
   <footer>
-    <p>Body constants from the measured Interlocking_Slots_A.stl: base Ø94 with 45° chamfer to Ø80, ID 70.56, face plate 2 mm, pattern reach r 34.3, blind mount holes Ø4 at ±38.8. Min wall is measured on the actual outlines (0.3 mm sampling). Print face-down without supports, so the tactile character comes from chunky through-cut geometry, not surface relief. SVG export stays compatible with satyr_grille_generator.py.</p>
+    <p>Body from the measured Interlocking_Slots_A.stl: base Ø94 with 45° chamfer to Ø80, ID 70.56, face plate 2 mm, pattern reach r 34.3, mount holes Ø4 at ±38.8. Min wall is measured on the actual outlines at 0.3 mm. Print face-down without supports. SVG export works with satyr_grille_generator.py.</p>
     <p>Grille body adapted from <a href="https://www.printables.com/model/1186855-satyr-3-diy-hifi-headphones">Satyr 3 DIY HiFi Headphones</a> by its original author, licensed under <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>. Changes: new front patterns and a parametric generator. Generated grilles are for non-commercial use only - do not sell them or prints of them. Unofficial fan tool, not affiliated with or endorsed by the Satyr 3 author; "Satyr 3" is used only to describe compatibility.</p>
   </footer>
 </div>
