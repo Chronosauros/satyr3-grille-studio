@@ -5,6 +5,9 @@ One HTML file, runs in any browser: pick a pattern family, choose the air
 (keep the design's own open area or set a target), check the minimum wall
 and download a print-ready STL or an SVG.
 
+The tool now lives at https://soundblooms.com/tools/satyr3-grille-studio; the
+old github.io address redirects there.
+
 ## Development
 
 The app remains a standalone `index.html`; no installation or build is required.
