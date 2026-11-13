@@ -5,7 +5,8 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+// The first inline script is the soundblooms redirect block (part C); the app is the one with the boot marker.
+const source = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).find(s => s.includes('/* ---------- boot ---------- */'));
 function app(saved = null) {
   const timers = new Map(), elements = new Map();
   let id = 0;
